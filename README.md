@@ -1,24 +1,23 @@
-# software-engineering-class-project```md
 # Navigation & Discovery for Informal Transport
 
-**One-line:** A rider-first, driver-protecting app that makes multi-leg journeys on informal transport predictable, safer, and more profitable — starting with a focused pilot and scaling across African cities.
+**One-line:** A rider-first, driver-protecting project that makes multi-leg journeys on informal transport predictable, safer, and more profitable — starting with a focused pilot and scaling across cities with similar informal systems.
 
 ---
 
 ## What this project does
-Intwana maps the real world of informal commuting — walk → junction → hop on → transfer — and gives riders and drivers visibility without disrupting how they work. Riders get step-by-step routes, verified pickup points, ETAs, and discreet alight alerts. Drivers get a lightweight way to signal availability, fill seats faster, and see demand hotspots so they can make more trips and increase earnings. The product is explicitly designed to protect drivers’ income and reduce the unpredictable losses that kill adoption.
+This project maps the real world of informal commuting — walk → junction → hop on → transfer — and gives riders and drivers visibility without disrupting how they work. Riders get step-by-step routes, verified pickup points, ETAs, and discreet alight alerts. Drivers get a lightweight way to signal availability, fill seats faster, and see demand hotspots so they can make more trips and increase earnings. The product is explicitly designed to protect drivers’ income and reduce the unpredictable losses that kill adoption.
 
 ---
 
 ## Why it matters
-- **This is livelihood first.** For drivers and conductors, minibuses/kekes/kombis are a primary source of income. Any tech that threatens earnings will be rejected — Intwana is built to increase trips and protect take-home pay, not replace people.  
-- **Time on road = money.** Faster pickups, fewer deadhead miles and better route predictability directly translate to higher daily income. The app targets features that increase throughput.  
+- **This is livelihood first.** For drivers and conductors, minibuses/kekes/kombis are a primary source of income. Any tech that threatens earnings will be rejected — the project is built to increase trips and protect take-home pay, not replace people.  
+- **Time on road = money.** Faster pickups, fewer deadhead miles and better route predictability directly translate to higher daily income. The work prioritizes features that increase throughput.  
 - **Extortion & enforcement are real.** Drivers lose serious money to petty corruption and inconsistent policing. The product treats this as a core user problem and prioritizes evidence, trust, and anonymity features instead of empty promises of protection.
 
 ---
 
 ## Core non-technical features (MVP mindset)
-These are user-facing, practical capabilities — no engineering detail here:
+User-facing, practical capabilities — no engineering detail here:
 - Multi-leg routing that matches real journeys (walk + informal ride + transfers).  
 - Verified pickup points (local partner / union endorsed).  
 - Real-time-ish driver availability and proximity information with low-data fallbacks.  
@@ -72,5 +71,3 @@ These are user-facing, practical capabilities — no engineering detail here:
 ---
 
 If you want this saved as `README.md` in the repo or converted into a one-page pitch or partner outreach email, tell me which and I’ll produce the file or copy next.
-::contentReference[oaicite:0]{index=0}
-```
