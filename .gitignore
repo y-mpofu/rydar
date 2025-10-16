@@ -1,0 +1,22 @@
+# OS junk
+.DS_Store
+
+# IntelliJ / JetBrains
+.idea/
+*.iml
+out/
+shelf/
+workspace.xml
+httpRequests/
+dataSources/
+dataSources.local.xml
+
+# Gradle
+.gradle/
+build/
+
+# Logs
+*.log
+
+# Spring Boot
+target/
