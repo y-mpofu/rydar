@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.transport'
 version = '0.0.1-SNAPSHOT'
-description = 'Backend for Informal Transport Discovery App'
+description = 'Backend for Rydar - Informal Transport Discovery App'
 
 java {
 	toolchain {
