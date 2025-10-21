@@ -1,10 +1,10 @@
-package com.transport.ridediscovery;
+package com.rydar;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class RideDiscoveryServiceApplicationTests {
+class RydarApplicationTests {
 
 	@Test
 	void contextLoads() {

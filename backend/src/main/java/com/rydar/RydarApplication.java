@@ -1,13 +1,13 @@
-package com.transport.ridediscovery;
+package com.rydar;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RideDiscoveryServiceApplication {
+public class RydarApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RideDiscoveryServiceApplication.class, args);
+		SpringApplication.run(RydarApplication.class, args);
 	}
 
 }
