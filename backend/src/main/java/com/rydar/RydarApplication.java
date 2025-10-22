@@ -9,5 +9,5 @@ public class RydarApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(RydarApplication.class, args);
 	}
-
 }
+
