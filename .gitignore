@@ -20,3 +20,7 @@ build/
 
 # Spring Boot
 target/
+
+# Mobile app (Expo / React Native) 
+/mobile-app/.expo/
+/mobile-app/node_modules/
