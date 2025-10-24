@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.6'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.diffplug.spotless' version '8.0.0'
 }
 
 group = 'com.rydar'
@@ -25,17 +26,34 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
 	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	implementation platform('io.jsonwebtoken:jjwt-bom:0.12.6')
+	implementation 'io.jsonwebtoken:jjwt-api'
+	runtimeOnly   'io.jsonwebtoken:jjwt-impl'
+	runtimeOnly   'io.jsonwebtoken:jjwt-jackson'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'  // ← ADD THIS
-    implementation 'com.h2database:h2'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+}
+
+spotless {
+	java {
+		googleJavaFormat()      // Use Google Java Style
+		target 'src/**/*.java'  // Format all Java sources
+		targetExclude 'build/**'
+	}
 }
