@@ -50,6 +50,8 @@ cd rydar
 - Java **17+** (Java 21 recommended)
 - **PostgreSQL** (for database)
 - macOS system with **Homebrew** installed
+- **IMPORTANT:** Open the **backend** folder as a standalone project, not as part of the entire rydar folder. in any IDE (intelliJ/ VS Code).
+  For example: Enter your IDE, Click open, and click direcly on the backend folder in rydar.
 
 Make sure Java is installed:
 
@@ -110,9 +112,10 @@ GRANT ALL PRIVILEGES ON DATABASE rydar_dev TO rydar_user;
 
 In the `backend` folder, create a file named `.env`:
 
-```
-DB_USERNAME=rydar_user
-DB_PASSWORD=RydarPass123@
+```bash
+cd backend
+echo "DB_USERNAME=rydar_user" > .env
+echo "DB_PASSWORD=RydarPass123@" >> .env
 ```
 
 Spring Boot will automatically read these values when you run the app.
@@ -156,6 +159,7 @@ Once the backend is running, you can access the automatically generated OpenAPI 
 
 - Node.js **18+**
 - npm (or yarn)
+- **IMPORTANT:** Open the **mobile-app** folder as a standalone project in any IDE (VS Code)
 - Expo CLI (global install, one time):
 
 ```bash
