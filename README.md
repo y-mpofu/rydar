@@ -141,7 +141,6 @@ If the build is successful, run:
 If everything is correct, you’ll see Hibernate create tables and the app will run at:
 
 - **API root:** [http://localhost:8080](http://localhost:8080)
-- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 ---
 
