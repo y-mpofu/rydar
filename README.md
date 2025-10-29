@@ -132,7 +132,7 @@ Start the backend:
 
 If the build fails, note the error and reach out to the team/ or ask AI.
 
-if the build is successful, run:
+If the build is successful, run:
 
 ```bash
 ./gradlew bootRun
