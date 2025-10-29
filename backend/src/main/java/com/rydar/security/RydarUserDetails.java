@@ -25,7 +25,6 @@ public class RydarUserDetails implements UserDetails {
     return user.getEmail();
   }
 
-
   @Override
   public String getPassword() {
     return user.getPassword();
