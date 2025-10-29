@@ -130,7 +130,8 @@ Start the backend:
 ./gradlew clean build --refresh-dependencies
 ```
 
-If the build fails, note the error and reach out to the team/ or ask AI
+If the build fails, note the error and reach out to the team/ or ask AI.
+
 if the build is successful, run:
 
 ```bash
