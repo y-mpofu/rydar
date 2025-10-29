@@ -50,8 +50,8 @@ cd rydar
 - Java **17+** (Java 21 recommended)
 - **PostgreSQL** (for database)
 - macOS system with **Homebrew** installed
-- **IMPORTANT:** Open the **backend** folder as a standalone project, not as part of the entire rydar folder. in any IDE (intelliJ/ VS Code).
-  For example: Enter your IDE, Click open, and click direcly on the backend folder in rydar.
+- Open the **backend** folder as a standalone project, not as part of the entire rydar folder, in any IDE (intelliJ / VS Code).
+  For example: Enter your IDE, Click open, and click directly on the backend folder in rydar.
 
 Make sure Java is installed:
 
