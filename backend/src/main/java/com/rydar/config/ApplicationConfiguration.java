@@ -21,10 +21,10 @@ public class ApplicationConfiguration {
 
   @Bean
   public UserDetailsService userDetailsService() {
-    return username ->
+    return email ->
         new RydarUserDetails(
             userRepository
-                .findByEmail(username)
+                .findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found")));
   }
 

@@ -1,12 +1,15 @@
 package com.rydar.auth;
 
 import com.rydar.security.JwtService;
+import com.rydar.security.RydarUserDetails;
 import com.rydar.user.Role;
 import com.rydar.user.User;
 import com.rydar.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,18 +32,17 @@ public class AuthenticationService {
             .role(role)
             .build();
     userRepository.save(user);
-    var jwtToken = jwtService.generateToken(user);
+    var userDetails = new RydarUserDetails(user);
+    var jwtToken = jwtService.generateToken(userDetails);
     return AuthenticationResponse.builder().token(jwtToken).build();
   }
 
   public AuthenticationResponse authenticate(AuthenticationRequest request) {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-    var user =
-        userRepository
-            .findByEmail(request.getEmail())
-            .orElseThrow(); // TO DO: Catch and handle specific exception
-    var jwtToken = jwtService.generateToken(user);
+    Authentication auth =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+    UserDetails userDetails = (UserDetails) auth.getPrincipal();
+    var jwtToken = jwtService.generateToken(userDetails);
     return AuthenticationResponse.builder().token(jwtToken).build();
   }
 }
