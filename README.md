@@ -127,7 +127,7 @@ Spring Boot will automatically read these values when you run the app.
 Start the backend:
 
 ```bash
-./gradlew ./gradlew clean build --refresh-dependencies
+./gradlew clean build --refresh-dependencies
 ```
 
 If the build fails, note the error and reach out to the team/ or ask AI
