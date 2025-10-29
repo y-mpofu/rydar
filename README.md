@@ -41,36 +41,118 @@ git clone https://github.com/your-username/rydar.git
 cd rydar
 ```
 
+---
+
 ### 2) Run the Backend (Java)
 
-**Prerequisites**
+#### **Prerequisites**
 
 - Java **17+** (Java 21 recommended)
+- **PostgreSQL** (for database)
+- macOS system with **Homebrew** installed
 
-**Commands**
-
-Mac/Linux:
+Make sure Java is installed:
 
 ```bash
-cd backend
+java -version
+```
+
+If not, install it (for example):
+
+```bash
+brew install openjdk@21
+echo 'export PATH="/usr/local/opt/openjdk@21/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+---
+
+#### **Database Setup (PostgreSQL on macOS)**
+
+Rydar uses **PostgreSQL** for local development.
+You can use **any username and password** you prefer — just make sure they match in both Postgres and your `.env` file.
+
+##### **1. Install and start PostgreSQL**
+
+```bash
+brew install postgresql
+brew services start postgresql
+```
+
+Verify installation:
+
+```bash
+psql --version
+```
+
+---
+
+##### **2. Create the database and user**
+
+Open the Postgres shell:
+
+```bash
+psql postgres
+```
+
+Then run:
+
+```sql
+CREATE DATABASE rydar_dev;
+CREATE USER rydar_user WITH PASSWORD 'RydarPass123@';
+GRANT ALL PRIVILEGES ON DATABASE rydar_dev TO rydar_user;
+\q
+```
+
+---
+
+##### **3. Add your credentials**
+
+In the `backend` folder, create a file named `.env`:
+
+```
+DB_USERNAME=rydar_user
+DB_PASSWORD=RydarPass123@
+```
+
+Spring Boot will automatically read these values when you run the app.
+
+---
+
+##### **4. Verify**
+
+Start the backend:
+
+```bash
+./gradlew ./gradlew clean build --refresh-dependencies
+```
+
+If the build fails, note the error and reach out to the team/ or ask AI
+if the build is successful, run:
+
+```bash
 ./gradlew bootRun
 ```
 
-Windows:
+If everything is correct, you’ll see Hibernate create tables and the app will run at:
 
-```bash
-cd backend
-gradlew.bat bootRun
-```
+- **API root:** [http://localhost:8080](http://localhost:8080)
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-- Gradle will download all dependencies automatically.
-- The API starts at **[http://localhost:8080](http://localhost:8080)**.
+---
 
-> If Java isn’t installed, download a JDK (for example from [Oracle](https://www.oracle.com/java/technologies/downloads/)) and ensure `java -version` works in your terminal.
+#### **View Backend API Documentation**
+
+Once the backend is running, you can access the automatically generated OpenAPI documentation via **SpringDoc**:
+
+- **Swagger UI (interactive docs):**
+  [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+---
 
 ### 3) Run the Mobile App (Expo)
 
-**Prerequisites**
+#### **Prerequisites**
 
 - Node.js **18+**
 - npm (or yarn)
@@ -80,7 +162,7 @@ gradlew.bat bootRun
 npm install -g expo-cli
 ```
 
-**Commands**
+#### **Commands**
 
 ```bash
 cd ../mobile-app
