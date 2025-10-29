@@ -17,7 +17,10 @@ public class User {
   @Id @GeneratedValue private Integer id;
   private String firstname;
   private String lastname;
+
+  @Column(nullable = false, unique = true)
   private String email;
+
   private String username;
   private String password;
 
