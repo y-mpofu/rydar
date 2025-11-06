@@ -2,7 +2,9 @@ package com.rydar.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -30,21 +32,21 @@ class JwtServiceTest {
 
     assertNotNull(token);
     assertFalse(token.isEmpty());
-    assertEquals("john@example.com", jwtService.extractEmail(token));
+    assertEquals("john@example.com", jwtService.extractAllClaims(token).getSubject());
   }
 
   @Test
-  void shouldReturnNullForExpiredToken() throws InterruptedException {
+  void shouldThrowForExpiredToken() throws InterruptedException {
     String shortLived = buildToken(user.getUsername(), 1000);
-    assertEquals("john@example.com", jwtService.extractEmail(shortLived));
+    assertEquals("john@example.com", jwtService.extractAllClaims(shortLived).getSubject());
     Thread.sleep(1500);
-    assertNull(jwtService.extractEmail(shortLived));
+    assertThrows(ExpiredJwtException.class, () -> jwtService.extractAllClaims(shortLived));
   }
 
   @Test
-  void shouldReturnNullForInvalidToken() {
+  void shouldThrowForInvalidToken() {
     String invalidToken = "not.a.valid.token";
-    assertNull(jwtService.extractEmail(invalidToken));
+    assertThrows(MalformedJwtException.class, () -> jwtService.extractAllClaims(invalidToken));
   }
 
   private static String buildToken(String subject, long ttlMillis) {
