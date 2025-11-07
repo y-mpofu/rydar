@@ -13,6 +13,6 @@ public class DriverController {
 
   @PostMapping("/location")
   public ResponseEntity<Void> updateLocation(@RequestBody LocationUpdate locationUpdate) {
-      return ResponseEntity.ok().build(); // TO DO : Update class
+    return ResponseEntity.ok().build(); // TO DO : Update class
   }
 }

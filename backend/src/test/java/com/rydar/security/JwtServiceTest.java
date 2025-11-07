@@ -2,6 +2,7 @@ package com.rydar.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.rydar.user.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -9,21 +10,21 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.util.Date;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 
 class JwtServiceTest {
 
   private JwtService jwtService;
-  private UserDetails user;
+  private User user;
   private static final String TEST_SECRET_BASE64 = "9ghWh0nbGIySJtBm+PTWphm8ZqRRdTTj/qJhQATRDkQ=";
+  private static final UUID expectedId = UUID.randomUUID();
 
   @BeforeEach
   void setUp() {
     jwtService = new JwtService();
-    user = User.withUsername("john@example.com").password("x").authorities("RIDER").build();
+    user = User.builder().id(expectedId).email("john@example.com").password("x").build();
   }
 
   @Test
@@ -32,13 +33,13 @@ class JwtServiceTest {
 
     assertNotNull(token);
     assertFalse(token.isEmpty());
-    assertEquals("john@example.com", jwtService.extractAllClaims(token).getSubject());
+    assertEquals(expectedId.toString(), jwtService.extractAllClaims(token).getSubject());
   }
 
   @Test
   void shouldThrowForExpiredToken() throws InterruptedException {
-    String shortLived = buildToken(user.getUsername(), 1000);
-    assertEquals("john@example.com", jwtService.extractAllClaims(shortLived).getSubject());
+    String shortLived = buildToken(expectedId, 1000);
+    assertEquals(expectedId.toString(), jwtService.extractAllClaims(shortLived).getSubject());
     Thread.sleep(1500);
     assertThrows(ExpiredJwtException.class, () -> jwtService.extractAllClaims(shortLived));
   }
@@ -49,9 +50,9 @@ class JwtServiceTest {
     assertThrows(MalformedJwtException.class, () -> jwtService.extractAllClaims(invalidToken));
   }
 
-  private static String buildToken(String subject, long ttlMillis) {
+  private static String buildToken(UUID subject, long ttlMillis) {
     return Jwts.builder()
-        .setSubject(subject)
+        .setSubject(subject.toString())
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setExpiration(new Date(System.currentTimeMillis() + ttlMillis))
         .signWith(
