@@ -5,11 +5,14 @@ import com.rydar.security.RydarUserDetails;
 import com.rydar.user.Role;
 import com.rydar.user.User;
 import com.rydar.user.UserRepository;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,17 +35,23 @@ public class AuthenticationService {
             .role(role)
             .build();
     userRepository.save(user);
-    var userDetails = new RydarUserDetails(user);
-    var jwtToken = jwtService.generateToken(userDetails);
-    return AuthenticationResponse.builder().token(jwtToken).build();
+    RydarUserDetails userDetails = new RydarUserDetails(user);
+    return AuthenticationResponse.builder().token(createJwt(userDetails)).build();
   }
 
   public AuthenticationResponse authenticate(AuthenticationRequest request) {
     Authentication auth =
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-    UserDetails userDetails = (UserDetails) auth.getPrincipal();
-    var jwtToken = jwtService.generateToken(userDetails);
-    return AuthenticationResponse.builder().token(jwtToken).build();
+    RydarUserDetails userDetails = (RydarUserDetails) auth.getPrincipal();
+    return AuthenticationResponse.builder().token(createJwt(userDetails)).build();
+  }
+
+  private String createJwt(RydarUserDetails userDetails) {
+    List<String> roles =
+        userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+    Map<String, Object> extraClaims = new HashMap<>();
+    extraClaims.put("roles", roles);
+    return jwtService.generateToken(extraClaims, userDetails.getUser());
   }
 }
