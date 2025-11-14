@@ -10,7 +10,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RiderController {
 
-    private final LocationService locationService;
-
-
+  private final LocationService locationService;
 }
