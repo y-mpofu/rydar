@@ -7,7 +7,7 @@ export default function DriverLogin() {
     const [password, setPassword] = useState("");
     const router = useRouter();
     const handleLogin = () => {
-        console.log("Driver Login:", { email, password });
+        router.push("/driver/home");
     };
 
     return (

@@ -3,7 +3,9 @@ import { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import MapView, { Marker, Circle } from "react-native-maps";
 import * as Location from "expo-location";
-
+import Navbar from "./Navbar";
+import { router } from "expo-router";
+import ViewAccountPopup from "./ViewAccountPopup";
 export default function HomeScreen() {
     const [region, setRegion] = useState<{
         latitude: number;
@@ -12,6 +14,12 @@ export default function HomeScreen() {
         longitudeDelta: number;
     } | null>(null);
 
+    const [showAccount, setShowAccount] = useState(false);
+
+    const handleLogout = () => {
+        // Clear token or session here if needed
+        router.push("/driver/login");
+    };
 
     useEffect(() => {
         (async () => {
@@ -41,7 +49,18 @@ export default function HomeScreen() {
     }, []);
 
     return (
+
         <View style={styles.container}>
+            <Navbar
+                onUserPress={() => setShowAccount(true)}
+                onLogout={handleLogout}
+            />
+
+            <ViewAccountPopup
+                visible={showAccount}
+                onClose={() => setShowAccount(false)}
+                onLogout={handleLogout}
+            />
             {region && (
                 <MapView
                     style={styles.map}
