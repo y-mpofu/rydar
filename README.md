@@ -33,6 +33,7 @@ Rydar consists of two components:
 - **Mobile App** – React Native (Expo)
 
 Follow the steps below to install and run both parts locally.
+Please note that if the backend run fails, it won't affect the mobile app (since it's still in development), so make sure to  checkout both independently.
 
 ### 1) Clone the Repository
 
