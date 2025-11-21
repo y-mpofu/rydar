@@ -19,7 +19,8 @@ public class LocationService {
   public void updateDriverLocation(String id, LocationUpdate locationUpdate) {
     long now = System.currentTimeMillis();
     UserLocation driverLocation =
-        new UserLocation(locationUpdate.latitude(), locationUpdate.longitude(), now);
+        new UserLocation(locationUpdate.latitude(), locationUpdate.longitude(), now,
+                locationUpdate.currRoute().toUpperCase());
     availableDriversLocation.put(id, driverLocation);
   }
 
@@ -35,7 +36,7 @@ public class LocationService {
             e ->
                 isLocationWithinBounds(
                     e.getValue().latitude(), e.getValue().longitude(), riderBounds))
-        .map(e -> new NearbyDriver(e.getKey(), e.getValue().latitude(), e.getValue().longitude()))
+        .map(e -> new NearbyDriver(e.getKey(), e.getValue().latitude(), e.getValue().longitude(), e.getValue().curr_route() ))
         .limit(limit)
         .toList();
   }

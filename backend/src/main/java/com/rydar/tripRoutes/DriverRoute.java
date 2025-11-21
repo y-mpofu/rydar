@@ -1,4 +1,4 @@
-package com.rydar.trip_routes;
+package com.rydar.tripRoutes;
 
 /** Route object to track drivers' routes\ */
 public record DriverRoute(String routeName, String endLocation) {

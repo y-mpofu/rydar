@@ -1,6 +1,6 @@
 package com.rydar.driver;
 
-import com.rydar.trip_routes.DriverRoute;
+import com.rydar.tripRoutes.DriverRoute;
 import com.rydar.user.User;
 import jakarta.persistence.*;
 import java.util.HashSet;
@@ -10,12 +10,9 @@ import lombok.EqualsAndHashCode; // Make sure this is imported!
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Driver entity extending User. Has two JSON columns: 1. routes - All routes the driver has created
- * 2. activeRoutes - Currently active/working routes
- */
+
 @Data
-@EqualsAndHashCode(callSuper = true) // Include User fields in equals/hashCode
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "drivers")
 public class Driver extends User {
