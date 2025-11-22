@@ -10,7 +10,6 @@ import lombok.EqualsAndHashCode; // Make sure this is imported!
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity

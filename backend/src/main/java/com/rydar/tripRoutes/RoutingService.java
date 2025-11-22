@@ -1,22 +1,18 @@
 package com.rydar.tripRoutes;
 
-import lombok.RequiredArgsConstructor;
 import com.rydar.driver.Driver;
 import com.rydar.driver.DriverRepository;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
-
+import org.springframework.stereotype.Service;
 
 @Service
 public class RoutingService {
 
-    private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
+  private static final Logger log = LoggerFactory.getLogger(RoutingService.class);
 
   private final DriverRepository driverRepo;
 
@@ -24,15 +20,15 @@ public class RoutingService {
     this.driverRepo = driverRepository;
   }
 
-  public boolean addRoute(UUID driverID, String name, String end) {
+  public boolean addRoute(UUID driverID, String name) {
 
     Driver driver = driverRepo.findById(driverID).orElse(null);
-    if (driver == null){
-        log.info("Could not find a driver at the given ID, ADD FAILED");
-    return false;
+    if (driver == null) {
+      log.info("Could not find a driver at the given ID, ADD FAILED");
+      return false;
     }
 
-    DriverRoute route = new DriverRoute(name, end);
+    DriverRoute route = new DriverRoute(name);
     driver.getRoutes().add(route);
 
     driverRepo.save(driver);
@@ -42,15 +38,16 @@ public class RoutingService {
   public boolean removeRoute(UUID driverID, String name) {
 
     Driver driver = driverRepo.findById(driverID).orElse(null);
-      if (driver == null){
-          log.info("Driver not found for given ID, REMOVE FAILED");
-          return false;
-      }
+    if (driver == null) {
+      log.info("Driver not found for given ID, REMOVE FAILED");
+      return false;
+    }
 
-    boolean removed = driver.getRoutes().removeIf(route -> route.routeName().equals(name));
+    driver.getRoutes().removeIf(route -> route.routeName().equals(name));
 
     driverRepo.save(driver);
-    return removed;
+
+    return true;
   }
 
   public Set<DriverRoute> getRoutes(UUID driverID) {
