@@ -9,39 +9,30 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/routes")
+@RequestMapping("/api/v1/drivers/me/routes")
 @RequiredArgsConstructor
 public class RoutesController {
 
   private final RoutingService routingService;
 
-  @GetMapping("/me/allRoutes")
+  @GetMapping("/allRoutes")
   public ResponseEntity<Set<DriverRoute>> getMyRoutes(@AuthenticationPrincipal String userID) {
     return ResponseEntity.ok(routingService.getRoutes(UUID.fromString(userID)));
   }
 
-  @PostMapping("/me/add")
+  @PostMapping("/add")
   public ResponseEntity<Void> addMyRoute(
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
-    boolean success = routingService.addRoute(UUID.fromString(userId), request.routeName());
-
-    if (success) {
+    routingService.addRoute(UUID.fromString(userId), request.routeName());
       return ResponseEntity.status(201).build(); // 201 Created
-    }
-    return null;
   }
 
-  @DeleteMapping("/me/remove/")
+  @DeleteMapping("/remove")
   public ResponseEntity<Void> removeMyRoute(
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
-    boolean removed = routingService.removeRoute(UUID.fromString(userId), request.routeName());
-
-    if (removed) {
-      return ResponseEntity.status(201).build(); // 204 No Content
-    }
-
-    return null;
+    routingService.removeRoute(UUID.fromString(userId), request.routeName());
+    return ResponseEntity.status(201).build(); // 204 No Content
   }
 }
