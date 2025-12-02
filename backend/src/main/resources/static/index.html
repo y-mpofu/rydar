@@ -2,19 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Rydar API</title>
+    <title>Rydar</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         :root {
-            --bg: #050816;
-            --bg-soft: rgba(15, 23, 42, 0.92);
-            --accent: #6366f1;
-            --accent-soft: rgba(99, 102, 241, 0.18);
+            --bg: #020617;
+            --bg-elevated: rgba(15, 23, 42, 0.96);
+            --border-subtle: rgba(148, 163, 184, 0.25);
+            --accent: #22c55e;
+            --accent-soft: rgba(34, 197, 94, 0.18);
+            --accent-secondary: #38bdf8;
             --text-main: #e5e7eb;
             --text-muted: #9ca3af;
-            --border-subtle: rgba(148, 163, 184, 0.25);
-            --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.65);
-            --radius-lg: 24px;
+            --radius-xl: 26px;
+            --shadow-soft: 0 32px 120px rgba(15, 23, 42, 0.9);
         }
 
         * {
@@ -31,173 +32,433 @@
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
             "Roboto", sans-serif;
             background:
-                    radial-gradient(circle at top left, rgba(56, 189, 248, 0.11), transparent 55%),
-                    radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.13), transparent 55%),
-                    var(--bg);
+                    radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.16), transparent 60%),
+                    radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.18), transparent 55%),
+                    radial-gradient(circle at 50% 120%, rgba(15, 23, 42, 0.9), #020617 70%);
             color: var(--text-main);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 2.2rem 1.4rem;
         }
 
         .shell {
             width: 100%;
-            max-width: 520px;
+            max-width: 980px;
         }
 
-        .card {
+        .frame {
             position: relative;
-            background: var(--bg-soft);
-            border-radius: var(--radius-lg);
-            padding: 2.4rem 2.6rem 2.1rem;
+            border-radius: 32px;
+            padding: 2px;
+            background: radial-gradient(circle at 0 0, #22c55e, transparent 60%),
+            radial-gradient(circle at 100% 100%, #38bdf8, transparent 60%);
             box-shadow: var(--shadow-soft);
-            border: 1px solid var(--border-subtle);
-            overflow: hidden;
         }
 
-        .card::before {
-            content: "";
-            position: absolute;
-            inset: -40%;
-            background:
-                    radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.14), transparent 55%),
-                    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.18), transparent 55%);
-            opacity: 0.4;
-            z-index: -1;
+        .frame-inner {
+            border-radius: 30px;
+            background: radial-gradient(circle at top, rgba(15, 23, 42, 1) 0, #020617 75%);
+            padding: 2.4rem 2.6rem;
+            border: 1px solid rgba(15, 23, 42, 0.9);
         }
 
-        .chip {
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+            gap: 2.4rem;
+            align-items: center;
+        }
+
+        .pill {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.24rem 0.75rem;
+            gap: 0.55rem;
+            padding: 0.28rem 0.9rem;
             border-radius: 999px;
-            font-size: 0.7rem;
-            letter-spacing: 0.12em;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.85);
+            font-size: 0.68rem;
+            letter-spacing: 0.16em;
             text-transform: uppercase;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.55);
             color: var(--text-muted);
             margin-bottom: 1.4rem;
         }
 
-        .chip-dot {
-            width: 8px;
-            height: 8px;
+        .pill-dot {
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.18);
+            background: var(--accent);
+            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.25);
         }
 
-        .brand {
+        .brand-row {
             display: flex;
             align-items: center;
-            gap: 0.85rem;
-            margin-bottom: 0.4rem;
+            gap: 0.9rem;
+            margin-bottom: 0.6rem;
         }
 
-        .brand-mark {
-            width: 36px;
-            height: 36px;
-            border-radius: 1.2rem;
+        .logo {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 18px;
             background:
-                    radial-gradient(circle at 30% 20%, #e5e7eb 0, #c4b5fd 32%, transparent 65%),
-                    radial-gradient(circle at 75% 80%, #6366f1 0, #22d3ee 40%, transparent 70%);
-            border: 1px solid rgba(148, 163, 184, 0.4);
+                    radial-gradient(circle at 20% 10%, #ecfeff 0, #d1fae5 26%, transparent 70%),
+                    radial-gradient(circle at 80% 80%, #22c55e 0, #38bdf8 40%, transparent 75%);
+            border: 1px solid rgba(148, 163, 184, 0.55);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #020617;
+            overflow: hidden;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
         }
 
-        .brand-text {
+        .logo-mark {
+            position: relative;
+            width: 70%;
+            height: 70%;
+            border-radius: 999px;
+            border: 2px solid rgba(15, 23, 42, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo-path {
+            position: absolute;
+            width: 180%;
+            height: 2px;
+            background: linear-gradient(to right, #022c22, #22c55e, #38bdf8);
+            transform: rotate(-25deg) translateY(2px);
+            opacity: 0.95;
+        }
+
+        .logo-text {
+            position: relative;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #020617;
+            text-shadow: 0 0 4px rgba(226, 232, 240, 0.75);
+        }
+
+        .brand-meta {
             display: flex;
             flex-direction: column;
             gap: 0.1rem;
         }
 
         .brand-name {
-            font-size: 1.3rem;
-            letter-spacing: 0.06em;
+            font-size: 1.45rem;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
         }
 
         .brand-sub {
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: var(--text-muted);
         }
 
         .headline {
-            margin-top: 1.2rem;
-            font-size: 1.7rem;
+            margin-top: 1.3rem;
+            font-size: 2.05rem;
+            line-height: 1.26;
             font-weight: 600;
+            letter-spacing: 0.01em;
         }
 
         .headline span {
             color: var(--accent);
         }
 
-        .body {
+        .tagline {
             margin-top: 0.6rem;
-            font-size: 0.95rem;
-            line-height: 1.6;
+            font-size: 0.98rem;
+            line-height: 1.7;
             color: var(--text-muted);
+            max-width: 32rem;
         }
 
-        .meta-row {
-            margin-top: 1.5rem;
+        .cta-row {
+            margin-top: 1.9rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            font-size: 0.78rem;
+            gap: 0.9rem;
+        }
+
+        .store-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            background: rgba(15, 23, 42, 0.98);
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition:
+                    transform 0.12s ease-out,
+                    box-shadow 0.12s ease-out,
+                    border-color 0.12s ease-out,
+                    background 0.12s ease-out;
+        }
+
+        .store-btn-primary {
+            border-color: rgba(34, 197, 94, 0.85);
+            background: radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.18), transparent 55%),
+            rgba(15, 23, 42, 0.98);
+        }
+
+        .store-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.9);
+            border-color: rgba(129, 140, 248, 0.95);
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .store-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, #f9fafb 0, #e5e7eb 20%, #22c55e 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #022c22;
+        }
+
+        .store-label {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .store-label span:first-child {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
             color: var(--text-muted);
         }
 
-        .pill {
-            padding: 0.3rem 0.7rem;
-            border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            background: rgba(15, 23, 42, 0.85);
-        }
-
-        .pill strong {
-            color: var(--text-main);
+        .store-label span:last-child {
+            font-size: 0.95rem;
             font-weight: 500;
         }
 
-        .pill-api {
-            border-color: rgba(99, 102, 241, 0.7);
-            background: var(--accent-soft);
-            color: var(--text-main);
+        .footnote {
+            margin-top: 1.2rem;
+            font-size: 0.78rem;
+            color: #64748b;
         }
 
-        .pill-api span {
-            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-            "Liberation Mono", "Courier New", monospace;
-            font-size: 0.78rem;
+        /* Right panel */
+
+        .visual {
+            position: relative;
+            justify-self: center;
         }
 
-        .footer-note {
-            margin-top: 1.6rem;
-            font-size: 0.78rem;
+        .orbit {
+            position: absolute;
+            inset: -20%;
+            border-radius: 999px;
+            background:
+                    radial-gradient(circle at 30% 0, rgba(34, 197, 94, 0.2), transparent 60%),
+                    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.22), transparent 70%);
+            opacity: 0.9;
+            filter: blur(24px);
+            z-index: 0;
+        }
+
+        .device {
+            position: relative;
+            z-index: 1;
+            width: 260px;
+            max-width: 100%;
+            aspect-ratio: 9 / 16;
+            border-radius: 26px;
+            padding: 9px;
+            background: radial-gradient(circle at 0 0, #111827, #020617 75%);
+            border: 1px solid rgba(51, 65, 85, 0.9);
+            box-shadow:
+                    0 26px 80px rgba(15, 23, 42, 0.95),
+                    0 0 0 1px rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .device-notch {
+            align-self: center;
+            width: 40%;
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.95);
+            margin-bottom: 8px;
+        }
+
+        .device-screen {
+            flex: 1;
+            border-radius: 22px;
+            background:
+                    radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.2), transparent 50%),
+                    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.25), transparent 65%),
+                    #020617;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            overflow: hidden;
+        }
+
+        .screen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .screen-badge {
+            padding: 0.18rem 0.5rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            font-size: 0.63rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        .screen-map {
+            position: relative;
+            flex: 1;
+            border-radius: 18px;
+            background:
+                    linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.9)),
+                    radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.17), transparent 55%),
+                    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.18), transparent 60%);
+            overflow: hidden;
+        }
+
+        .map-grid {
+            position: absolute;
+            inset: -20%;
+            background-image:
+                    linear-gradient(to right, rgba(148, 163, 184, 0.16) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.8;
+        }
+
+        .route {
+            position: absolute;
+            inset: 18% 10% 22% 16%;
+            border-radius: 26px;
+            border: 1px dashed rgba(148, 163, 184, 0.45);
+            overflow: hidden;
+        }
+
+        .route-line {
+            position: absolute;
+            inset: 18% 16px 26% 12px;
+            border-radius: 999px;
+            background:
+                    linear-gradient(
+                            120deg,
+                            var(--accent),
+                            var(--accent-secondary)
+                    );
+            filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.45));
+        }
+
+        .pin {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            border: 2px solid #020617;
+            background: #22c55e;
+            box-shadow: 0 0 14px rgba(34, 197, 94, 0.7);
+        }
+
+        .pin-start {
+            left: 14%;
+            bottom: 22%;
+        }
+
+        .pin-end {
+            right: 12%;
+            top: 18%;
+            background: #38bdf8;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+        }
+
+        .card-status {
+            position: absolute;
+            left: 50%;
+            bottom: 10%;
+            transform: translateX(-50%);
+            padding: 0.26rem 0.7rem;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.65);
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .card-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--accent);
+        }
+
+        .api-note {
+            margin-top: 1.4rem;
+            font-size: 0.72rem;
             color: #6b7280;
+            text-align: right;
         }
 
-        @media (max-width: 540px) {
-            .card {
-                padding: 2rem 1.6rem 1.7rem;
-                border-radius: 18px;
+        @media (max-width: 860px) {
+            .frame-inner {
+                padding: 2.1rem 1.7rem 1.9rem;
+            }
+            .layout {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 2rem;
+            }
+            .visual {
+                order: -1;
+                justify-self: flex-start;
+            }
+            .api-note {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 1.6rem 0.9rem;
+            }
+            .frame-inner {
+                padding: 1.9rem 1.4rem 1.7rem;
             }
             .headline {
-                font-size: 1.45rem;
+                font-size: 1.6rem;
             }
             .brand-name {
-                font-size: 1.15rem;
+                font-size: 1.25rem;
             }
-            .meta-row {
+            .cta-row {
                 flex-direction: column;
                 align-items: flex-start;
             }
@@ -206,45 +467,97 @@
 </head>
 <body>
 <div class="shell">
-    <section class="card" aria-label="Rydar API status">
-        <div class="chip">
-            <span class="chip-dot"></span>
-            Rydar backend online
+    <div class="frame">
+        <div class="frame-inner">
+            <div class="layout">
+                <!-- LEFT: copy + CTAs -->
+                <div>
+                    <div class="pill">
+                        <span class="pill-dot"></span>
+                        Rydar backend online
+                    </div>
+
+                    <div class="brand-row">
+                        <div class="logo" aria-hidden="true">
+                            <div class="logo-mark">
+                                <div class="logo-path"></div>
+                                <span class="logo-text">R</span>
+                            </div>
+                        </div>
+                        <div class="brand-meta">
+                            <div class="brand-name">RYDAR</div>
+                            <div class="brand-sub">Real-time mobility, API-driven.</div>
+                        </div>
+                    </div>
+
+                    <h1 class="headline">
+                        Secure <span>/api</span> routes powering the Rydar experience.
+                    </h1>
+
+                    <p class="tagline">
+                        Rydar orchestrates real-time trips, routing and tracking behind the scenes.
+                        This service exposes the secured backend that client apps use to discover, request
+                        and manage rides — all through a single, consistent API surface.
+                    </p>
+
+                    <div class="cta-row" aria-label="Mobile apps coming soon">
+                        <!-- Dummy links for now -->
+                        <a class="store-btn store-btn-primary" href="#app-store-soon">
+                            <div class="store-icon"></div>
+                            <div class="store-label">
+                                <span>Soon on</span>
+                                <span>App Store</span>
+                            </div>
+                        </a>
+
+                        <a class="store-btn" href="#google-play-soon">
+                            <div class="store-icon">▶</div>
+                            <div class="store-label">
+                                <span>Soon on</span>
+                                <span>Google Play</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <p class="footnote">
+                        Store links are placeholders for now. The public Rydar experience will ship on iOS and Android,
+                        backed by this API.
+                    </p>
+                </div>
+
+                <!-- RIGHT: device / map visual -->
+                <div class="visual" aria-hidden="true">
+                    <div class="orbit"></div>
+                    <div class="device">
+                        <div class="device-notch"></div>
+                        <div class="device-screen">
+                            <div class="screen-header">
+                                <span>Now • Rydar preview</span>
+                                <span class="screen-badge">Live routes</span>
+                            </div>
+                            <div class="screen-map">
+                                <div class="map-grid"></div>
+                                <div class="route">
+                                    <div class="route-line"></div>
+                                    <div class="pin pin-start"></div>
+                                    <div class="pin pin-end"></div>
+                                </div>
+                                <div class="card-status">
+                                    <span class="card-status-dot"></span>
+                                    <span>API connected • 32 ms avg</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="api-note">
+                You’re looking at the backend entrypoint. Integrate against <strong>/api</strong> .
+            </p>
         </div>
-
-        <header class="brand">
-            <div class="brand-mark">R</div>
-            <div class="brand-text">
-                <div class="brand-name">Rydar</div>
-                <div class="brand-sub">API service</div>
-            </div>
-        </header>
-
-        <h1 class="headline">
-            Secure <span>/api</span> powering the Rydar experience.
-        </h1>
-
-        <p class="body">
-            This instance exposes a secured REST API for the Rydar platform.
-            Public traffic should use the official client apps once they are available.
-        </p>
-
-        <div class="meta-row">
-            <div class="pill pill-api">
-                <span>BASE URL • /api</span>
-            </div>
-            <div class="pill">
-                <strong>Auth:</strong> JWT bearer tokens
-            </div>
-            <div class="pill">
-                <strong>Status:</strong> Running
-            </div>
-        </div>
-
-        <p class="footer-note">
-            Mobile apps & full client experience coming soon to supported platforms.
-        </p>
-    </section>
+    </div>
 </div>
 </body>
 </html>
