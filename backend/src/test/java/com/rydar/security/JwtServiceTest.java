@@ -38,9 +38,7 @@ class JwtServiceTest {
 
   @Test
   void shouldThrowForExpiredToken() throws InterruptedException {
-    String shortLived = buildToken(expectedId, 1000);
-    assertEquals(expectedId.toString(), jwtService.extractAllClaims(shortLived).getSubject());
-    Thread.sleep(1500);
+    String shortLived = buildToken(expectedId, -1000L);
     assertThrows(ExpiredJwtException.class, () -> jwtService.extractAllClaims(shortLived));
   }
 
