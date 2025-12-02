@@ -25,7 +25,7 @@ public class RoutesController {
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
     routingService.addRoute(UUID.fromString(userId), request.routeName());
-      return ResponseEntity.status(201).build(); // 201 Created
+    return ResponseEntity.status(201).build(); // 201 Created
   }
 
   @DeleteMapping("/remove")
