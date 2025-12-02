@@ -10,6 +10,26 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: rydar_ci
+          POSTGRES_USER: rydar
+          POSTGRES_PASSWORD: rydar_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U rydar -d rydar_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      SPRING_PROFILES_ACTIVE: ci
+      DB_USERNAME: rydar
+      DB_PASSWORD: rydar_password
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
