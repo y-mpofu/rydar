@@ -17,4 +17,7 @@ spring:
         format_sql: true
     database: postgresql
     open-in-view: false
+server:
+  port: ${PORT:8080}
+
 
