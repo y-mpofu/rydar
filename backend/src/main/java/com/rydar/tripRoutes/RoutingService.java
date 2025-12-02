@@ -5,14 +5,12 @@ import com.rydar.driver.DriverRepository;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-
 @Slf4j
 @Service
-public class RoutingService{
+public class RoutingService {
 
   private final DriverRepository driverRepo;
 
