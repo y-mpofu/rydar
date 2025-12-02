@@ -29,16 +29,20 @@ public class SecurityConfiguration {
         .cors(cors -> {}) //
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
-                        "/",
-                        "/api/v1/auth/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/actuator/health")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
+                    auth.requestMatchers(
+                                    "/",              // root
+                                    "/index.html",    // static index
+                                    "/error",         // Spring Boot error page
+                                    "/favicon.ico",
+                                    "/api/v1/auth/**",
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/actuator/health")
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated()
+        )
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authenticationProvider(authenticationProvider)

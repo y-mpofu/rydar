@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Rydar API</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg: #050816;
+            --bg-soft: rgba(15, 23, 42, 0.92);
+            --accent: #6366f1;
+            --accent-soft: rgba(99, 102, 241, 0.18);
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --border-subtle: rgba(148, 163, 184, 0.25);
+            --shadow-soft: 0 22px 60px rgba(0, 0, 0, 0.65);
+            --radius-lg: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+            "Roboto", sans-serif;
+            background:
+                    radial-gradient(circle at top left, rgba(56, 189, 248, 0.11), transparent 55%),
+                    radial-gradient(circle at bottom right, rgba(129, 140, 248, 0.13), transparent 55%),
+                    var(--bg);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .card {
+            position: relative;
+            background: var(--bg-soft);
+            border-radius: var(--radius-lg);
+            padding: 2.4rem 2.6rem 2.1rem;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background:
+                    radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.14), transparent 55%),
+                    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.18), transparent 55%);
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.24rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.55);
+            color: var(--text-muted);
+            margin-bottom: 1.4rem;
+        }
+
+        .chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.18);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 1.2rem;
+            background:
+                    radial-gradient(circle at 30% 20%, #e5e7eb 0, #c4b5fd 32%, transparent 65%),
+                    radial-gradient(circle at 75% 80%, #6366f1 0, #22d3ee 40%, transparent 70%);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #020617;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .brand-name {
+            font-size: 1.3rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .brand-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .headline {
+            margin-top: 1.2rem;
+            font-size: 1.7rem;
+            font-weight: 600;
+        }
+
+        .headline span {
+            color: var(--accent);
+        }
+
+        .body {
+            margin-top: 0.6rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .meta-row {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .pill {
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        .pill strong {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .pill-api {
+            border-color: rgba(99, 102, 241, 0.7);
+            background: var(--accent-soft);
+            color: var(--text-main);
+        }
+
+        .pill-api span {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+            "Liberation Mono", "Courier New", monospace;
+            font-size: 0.78rem;
+        }
+
+        .footer-note {
+            margin-top: 1.6rem;
+            font-size: 0.78rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 540px) {
+            .card {
+                padding: 2rem 1.6rem 1.7rem;
+                border-radius: 18px;
+            }
+            .headline {
+                font-size: 1.45rem;
+            }
+            .brand-name {
+                font-size: 1.15rem;
+            }
+            .meta-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <section class="card" aria-label="Rydar API status">
+        <div class="chip">
+            <span class="chip-dot"></span>
+            Rydar backend online
+        </div>
+
+        <header class="brand">
+            <div class="brand-mark">R</div>
+            <div class="brand-text">
+                <div class="brand-name">Rydar</div>
+                <div class="brand-sub">API service</div>
+            </div>
+        </header>
+
+        <h1 class="headline">
+            Secure <span>/api</span> powering the Rydar experience.
+        </h1>
+
+        <p class="body">
+            This instance exposes a secured REST API for the Rydar platform.
+            Public traffic should use the official client apps once they are available.
+        </p>
+
+        <div class="meta-row">
+            <div class="pill pill-api">
+                <span>BASE URL • /api</span>
+            </div>
+            <div class="pill">
+                <strong>Auth:</strong> JWT bearer tokens
+            </div>
+            <div class="pill">
+                <strong>Status:</strong> Running
+            </div>
+        </div>
+
+        <p class="footer-note">
+            Mobile apps & full client experience coming soon to supported platforms.
+        </p>
+    </section>
+</div>
+</body>
+</html>
