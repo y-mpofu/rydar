@@ -5,16 +5,23 @@ import com.rydar.user.UserAccount;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
+
 import lombok.Data;
-import lombok.EqualsAndHashCode; // Make sure this is imported!
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "drivers")
-public class Driver extends UserAccount {
+public class Driver {
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
+
+  @OneToOne
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
+  private UserAccount user;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")

@@ -2,7 +2,6 @@ package com.rydar.security;
 
 import com.rydar.user.UserAccount;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,7 +19,9 @@ public class RydarUserDetails implements UserDetails {
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return List.of(new SimpleGrantedAuthority(userAccount.getRole().name()));
+    return userAccount.getRoles().stream()
+        .map(role -> new SimpleGrantedAuthority(role.name()))
+        .toList();
   }
 
   @Override

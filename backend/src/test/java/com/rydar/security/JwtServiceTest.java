@@ -24,7 +24,8 @@ class JwtServiceTest {
   @BeforeEach
   void setUp() {
     jwtService = new JwtService();
-    userAccount = UserAccount.builder().id(expectedId).email("john@example.com").password("x").build();
+    userAccount =
+        UserAccount.builder().id(expectedId).email("john@example.com").password("x").build();
   }
 
   @Test

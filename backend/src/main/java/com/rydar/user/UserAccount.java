@@ -1,6 +1,7 @@
 package com.rydar.user;
 
 import jakarta.persistence.*;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,9 @@ public class UserAccount {
   private String username;
   private String password;
 
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "role")
   @Enumerated(EnumType.STRING)
-  private Role role;
+  private Set<Role> roles;
 }
