@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
-public class User {
+public class UserAccount {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

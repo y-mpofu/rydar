@@ -1,7 +1,7 @@
 package com.rydar.driver;
 
 import com.rydar.tripRoutes.DriverRoute;
-import com.rydar.user.User;
+import com.rydar.user.UserAccount;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,7 +14,7 @@ import org.hibernate.type.SqlTypes;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "drivers")
-public class Driver extends User {
+public class Driver extends UserAccount {
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")

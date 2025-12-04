@@ -1,6 +1,6 @@
 package com.rydar.security;
 
-import com.rydar.user.User;
+import com.rydar.user.UserAccount;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -12,28 +12,28 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Getter
 public class RydarUserDetails implements UserDetails {
 
-  private final User user;
+  private final UserAccount userAccount;
 
-  public RydarUserDetails(User user) {
-    this.user = user;
+  public RydarUserDetails(UserAccount userAccount) {
+    this.userAccount = userAccount;
   }
 
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return List.of(new SimpleGrantedAuthority(user.getRole().name()));
+    return List.of(new SimpleGrantedAuthority(userAccount.getRole().name()));
   }
 
   @Override
   public String getUsername() {
-    return user.getEmail(); // We don't want to support usernames yet.
+    return userAccount.getEmail(); // We don't want to support usernames yet.
   }
 
   @Override
   public String getPassword() {
-    return user.getPassword();
+    return userAccount.getPassword();
   }
 
   public UUID getUserId() {
-    return user.getId();
+    return userAccount.getId();
   }
 }

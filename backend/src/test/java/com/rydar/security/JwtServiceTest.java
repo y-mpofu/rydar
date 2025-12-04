@@ -2,7 +2,7 @@ package com.rydar.security;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.rydar.user.User;
+import com.rydar.user.UserAccount;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -17,19 +17,19 @@ import org.junit.jupiter.api.Test;
 class JwtServiceTest {
 
   private JwtService jwtService;
-  private User user;
+  private UserAccount userAccount;
   private static final String TEST_SECRET_BASE64 = "9ghWh0nbGIySJtBm+PTWphm8ZqRRdTTj/qJhQATRDkQ=";
   private static final UUID expectedId = UUID.randomUUID();
 
   @BeforeEach
   void setUp() {
     jwtService = new JwtService();
-    user = User.builder().id(expectedId).email("john@example.com").password("x").build();
+    userAccount = UserAccount.builder().id(expectedId).email("john@example.com").password("x").build();
   }
 
   @Test
   void shouldGenerateValidTokenForUser() {
-    String token = jwtService.generateToken(user);
+    String token = jwtService.generateToken(userAccount);
 
     assertNotNull(token);
     assertFalse(token.isEmpty());
