@@ -2,11 +2,10 @@ package com.rydar.tripRoutes;
 
 import com.rydar.driver.Driver;
 import com.rydar.driver.DriverRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -24,18 +23,23 @@ public class RoutingService {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Route name cannot be empty");
     }
-    Driver driver = driverRepo.findByUserId(userId)
-            .orElseThrow(() -> new EntityNotFoundException("Driver with ID " + userId + " not found"));
+    Driver driver =
+        driverRepo
+            .findByUserId(userId)
+            .orElseThrow(
+                () -> new EntityNotFoundException("Driver with ID " + userId + " not found"));
     DriverRoute route = new DriverRoute(name);
     driver.getRoutes().add(route);
     driverRepo.save(driver);
   }
 
-
   public void removeRoute(UUID userId, String name) {
 
-    Driver driver = driverRepo.findByUserId(userId)
-            .orElseThrow(() -> new EntityNotFoundException("Driver with userID " + userId + " not found"));
+    Driver driver =
+        driverRepo
+            .findByUserId(userId)
+            .orElseThrow(
+                () -> new EntityNotFoundException("Driver with userID " + userId + " not found"));
 
     boolean removed = driver.getRoutes().removeIf(route -> route.routeName().equals(name));
     if (!removed) {
