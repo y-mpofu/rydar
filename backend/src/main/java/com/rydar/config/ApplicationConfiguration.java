@@ -1,7 +1,7 @@
 package com.rydar.config;
 
 import com.rydar.security.RydarUserDetails;
-import com.rydar.user.UserRepository;
+import com.rydar.user.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,13 +17,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfiguration {
-  private final UserRepository userRepository;
+  private final UserAccountRepository userAccountRepository;
 
   @Bean
   public UserDetailsService userDetailsService() {
     return email ->
         new RydarUserDetails(
-            userRepository
+            userAccountRepository
                 .findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found")));
   }

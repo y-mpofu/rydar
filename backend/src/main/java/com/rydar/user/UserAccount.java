@@ -1,6 +1,7 @@
 package com.rydar.user;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -30,9 +31,10 @@ public class UserAccount {
   private String username;
   private String password;
 
+  @Builder.Default
   @ElementCollection(fetch = FetchType.EAGER)
   @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "role")
   @Enumerated(EnumType.STRING)
-  private Set<Role> roles;
+  private Set<Role> roles = new HashSet<>();
 }

@@ -20,7 +20,7 @@ public class RoutingService {
 
   public void addRoute(UUID driverID, String name) {
 
-    Driver driver = driverRepo.findById(driverID).orElse(null);
+    Driver driver = driverRepo.findByUserId(driverID).orElse(null);
     if (driver == null) {
       log.info("Could not find a driver at the given ID, ADD FAILED");
     }
@@ -33,7 +33,7 @@ public class RoutingService {
 
   public void removeRoute(UUID driverID, String name) {
 
-    Driver driver = driverRepo.findById(driverID).orElse(null);
+    Driver driver = driverRepo.findByUserId(driverID).orElse(null);
     if (driver == null) {
       log.info("Driver not found for given ID, REMOVE FAILED");
     }
@@ -44,6 +44,6 @@ public class RoutingService {
   }
 
   public Set<DriverRoute> getRoutes(UUID driverID) {
-    return driverRepo.findById(driverID).map(Driver::getRoutes).orElse(Collections.emptySet());
+    return driverRepo.findByUserId(driverID).map(Driver::getRoutes).orElse(Collections.emptySet());
   }
 }
