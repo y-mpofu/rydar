@@ -1,6 +1,6 @@
 package com.rydar.security;
 
-import com.rydar.user.User;
+import com.rydar.user.UserAccount;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 public class JwtService {
   private static final String SECRET_KEY = "9ghWh0nbGIySJtBm+PTWphm8ZqRRdTTj/qJhQATRDkQ=";
 
-  public String generateToken(User user) {
-    return generateToken(new HashMap<>(), user);
+  public String generateToken(UserAccount userAccount) {
+    return generateToken(new HashMap<>(), userAccount);
   }
 
-  public String generateToken(Map<String, Object> extraClaims, User user) {
+  public String generateToken(Map<String, Object> extraClaims, UserAccount userAccount) {
     return Jwts.builder()
         .setClaims(extraClaims)
-        .setSubject(user.getId().toString())
+        .setSubject(userAccount.getId().toString())
         .setIssuedAt(new Date(System.currentTimeMillis()))
         .setExpiration(
             new Date(
