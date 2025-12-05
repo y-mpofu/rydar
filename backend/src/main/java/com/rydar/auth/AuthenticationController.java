@@ -1,5 +1,6 @@
 package com.rydar.auth;
 
+import com.rydar.user.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,9 +27,15 @@ public class AuthenticationController {
     return ResponseEntity.ok(authService.registerDriver(request));
   }
 
-  @PostMapping("/authenticate")
-  public ResponseEntity<AuthenticationResponse> authenticate(
+  @PostMapping("/login/driver")
+  public ResponseEntity<AuthenticationResponse> authenticateDriver(
       @RequestBody AuthenticationRequest request) {
-    return ResponseEntity.ok(authService.authenticate(request));
+    return ResponseEntity.ok(authService.authenticateUser(request, Role.DRIVER));
+  }
+
+  @PostMapping("/login/rider")
+  public ResponseEntity<AuthenticationResponse> authenticateRider(
+      @RequestBody AuthenticationRequest request) {
+    return ResponseEntity.ok(authService.authenticateUser(request, Role.RIDER));
   }
 }

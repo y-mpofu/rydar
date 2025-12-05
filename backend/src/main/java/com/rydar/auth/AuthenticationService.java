@@ -49,11 +49,14 @@ public class AuthenticationService {
     return AuthenticationResponse.builder().token(createJwt(userDetails)).build();
   }
 
-  public AuthenticationResponse authenticate(AuthenticationRequest request) {
+  public AuthenticationResponse authenticateUser(AuthenticationRequest request, Role role) {
     Authentication auth =
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
     RydarUserDetails userDetails = (RydarUserDetails) auth.getPrincipal();
+    if (!userDetails.getRoles().contains(role)) {
+      throw new RuntimeException("User is not registered with the role " + role);
+    }
     return AuthenticationResponse.builder().token(createJwt(userDetails)).build();
   }
 

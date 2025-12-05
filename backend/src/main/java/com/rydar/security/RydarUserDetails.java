@@ -1,7 +1,9 @@
 package com.rydar.security;
 
+import com.rydar.user.Role;
 import com.rydar.user.UserAccount;
 import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,6 +34,10 @@ public class RydarUserDetails implements UserDetails {
   @Override
   public String getPassword() {
     return userAccount.getPassword();
+  }
+
+  public Set<Role> getRoles() {
+    return userAccount.getRoles();
   }
 
   public UUID getUserId() {
