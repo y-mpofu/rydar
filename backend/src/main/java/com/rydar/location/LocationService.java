@@ -23,7 +23,7 @@ public class LocationService {
             locationUpdate.latitude(),
             locationUpdate.longitude(),
             now,
-            locationUpdate.currRoute().toUpperCase());
+            locationUpdate.currRoute());
     availableDriversLocation.put(id, driverLocation);
   }
 

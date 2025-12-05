@@ -5,6 +5,8 @@ import com.rydar.driver.DriverRepository;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -18,32 +20,31 @@ public class RoutingService {
     this.driverRepo = driverRepository;
   }
 
-  public void addRoute(UUID driverID, String name) {
-
-    Driver driver = driverRepo.findByUserId(driverID).orElse(null);
-    if (driver == null) {
-      log.info("Could not find a driver at the given ID, ADD FAILED");
+  public void addRoute(UUID userId, String name) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Route name cannot be empty");
     }
-
+    Driver driver = driverRepo.findByUserId(userId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver with ID " + userId + " not found"));
     DriverRoute route = new DriverRoute(name);
     driver.getRoutes().add(route);
-
     driverRepo.save(driver);
   }
 
-  public void removeRoute(UUID driverID, String name) {
 
-    Driver driver = driverRepo.findByUserId(driverID).orElse(null);
-    if (driver == null) {
-      log.info("Driver not found for given ID, REMOVE FAILED");
+  public void removeRoute(UUID userId, String name) {
+
+    Driver driver = driverRepo.findByUserId(userId)
+            .orElseThrow(() -> new EntityNotFoundException("Driver with userID " + userId + " not found"));
+
+    boolean removed = driver.getRoutes().removeIf(route -> route.routeName().equals(name));
+    if (!removed) {
+      throw new IllegalStateException("Route '" + name + "' was not found for driver " + userId);
     }
-
-    driver.getRoutes().removeIf(route -> route.routeName().equals(name));
-
     driverRepo.save(driver);
   }
 
-  public Set<DriverRoute> getRoutes(UUID driverID) {
-    return driverRepo.findByUserId(driverID).map(Driver::getRoutes).orElse(Collections.emptySet());
+  public Set<DriverRoute> getRoutes(UUID userId) {
+    return driverRepo.findByUserId(userId).map(Driver::getRoutes).orElse(Collections.emptySet());
   }
 }
