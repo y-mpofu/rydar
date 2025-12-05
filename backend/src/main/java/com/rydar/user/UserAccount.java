@@ -1,6 +1,8 @@
 package com.rydar.user;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
-public class User {
+public class UserAccount {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,6 +31,10 @@ public class User {
   private String username;
   private String password;
 
+  @Builder.Default
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "role")
   @Enumerated(EnumType.STRING)
-  private Role role;
+  private Set<Role> roles = new HashSet<>();
 }

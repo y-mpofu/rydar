@@ -18,18 +18,24 @@ public class AuthenticationController {
   @PostMapping("/register/rider")
   public ResponseEntity<AuthenticationResponse> registerRider(
       @RequestBody RegisterRequest request) {
-    return ResponseEntity.ok(authService.register(request, Role.RIDER));
+    return ResponseEntity.ok(authService.registerRider(request));
   }
 
   @PostMapping("/register/driver")
   public ResponseEntity<AuthenticationResponse> registerDriver(
       @RequestBody RegisterRequest request) {
-    return ResponseEntity.ok(authService.register(request, Role.DRIVER));
+    return ResponseEntity.ok(authService.registerDriver(request));
   }
 
-  @PostMapping("/authenticate")
-  public ResponseEntity<AuthenticationResponse> authenticate(
+  @PostMapping("/login/driver")
+  public ResponseEntity<AuthenticationResponse> authenticateDriver(
       @RequestBody AuthenticationRequest request) {
-    return ResponseEntity.ok(authService.authenticate(request));
+    return ResponseEntity.ok(authService.authenticateUser(request, Role.DRIVER));
+  }
+
+  @PostMapping("/login/rider")
+  public ResponseEntity<AuthenticationResponse> authenticateRider(
+      @RequestBody AuthenticationRequest request) {
+    return ResponseEntity.ok(authService.authenticateUser(request, Role.RIDER));
   }
 }

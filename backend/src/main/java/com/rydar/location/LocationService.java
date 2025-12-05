@@ -20,10 +20,7 @@ public class LocationService {
     long now = System.currentTimeMillis();
     UserLocation driverLocation =
         new UserLocation(
-            locationUpdate.latitude(),
-            locationUpdate.longitude(),
-            now,
-            locationUpdate.currRoute().toUpperCase());
+            locationUpdate.latitude(), locationUpdate.longitude(), now, locationUpdate.currRoute());
     availableDriversLocation.put(id, driverLocation);
   }
 
