@@ -1,6 +1,6 @@
-package com.rydar.UserProfiles;
+package com.rydar.user.UserProfiles;
 
-import com.rydar.UserProfiles.dto.GetProfileResponse;
+import com.rydar.user.UserProfiles.dto.GetProfileResponse;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
