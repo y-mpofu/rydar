@@ -1,4 +1,4 @@
-package com.rydar.tripRoutes;
+package com.rydar.routes;
 
 import com.rydar.driver.Driver;
 import com.rydar.driver.DriverRepository;

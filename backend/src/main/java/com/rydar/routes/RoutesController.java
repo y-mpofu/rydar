@@ -1,6 +1,6 @@
-package com.rydar.tripRoutes;
+package com.rydar.routes;
 
-import com.rydar.tripRoutes.dto.AddRouteRequest;
+import com.rydar.routes.dto.AddRouteRequest;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
