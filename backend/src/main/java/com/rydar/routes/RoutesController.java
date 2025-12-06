@@ -1,6 +1,6 @@
-package com.rydar.tripRoutes;
+package com.rydar.routes;
 
-import com.rydar.tripRoutes.dto.AddRouteRequest;
+import com.rydar.routes.dto.AddRouteRequest;
 import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -13,18 +13,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RoutesController {
 
-  private final RoutingService routingService;
+  private final RoutesService routesService;
 
   @GetMapping("/allRoutes")
   public ResponseEntity<Set<DriverRoute>> getMyRoutes(@AuthenticationPrincipal String userID) {
-    return ResponseEntity.ok(routingService.getRoutes(UUID.fromString(userID)));
+    return ResponseEntity.ok(routesService.getRoutes(UUID.fromString(userID)));
   }
 
   @PostMapping("/add")
   public ResponseEntity<Void> addMyRoute(
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
-    routingService.addRoute(UUID.fromString(userId), request.routeName());
+    routesService.addRoute(UUID.fromString(userId), request.routeName());
     return ResponseEntity.status(201).build(); // 201 Created
   }
 
@@ -32,7 +32,7 @@ public class RoutesController {
   public ResponseEntity<Void> removeMyRoute(
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
-    routingService.removeRoute(UUID.fromString(userId), request.routeName());
+    routesService.removeRoute(UUID.fromString(userId), request.routeName());
     return ResponseEntity.status(201).build(); // 204 No Content
   }
 }

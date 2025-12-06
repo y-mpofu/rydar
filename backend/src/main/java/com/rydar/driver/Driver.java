@@ -1,6 +1,6 @@
 package com.rydar.driver;
 
-import com.rydar.tripRoutes.DriverRoute;
+import com.rydar.routes.DriverRoute;
 import com.rydar.user.UserAccount;
 import jakarta.persistence.*;
 import java.util.HashSet;

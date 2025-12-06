@@ -1,9 +1,9 @@
 package com.rydar.location;
 
 import com.rydar.location.dto.BoundingBox;
-import com.rydar.location.dto.LocationUpdate;
+import com.rydar.location.dto.DriverLocation;
+import com.rydar.location.dto.DriverLocationUpdate;
 import com.rydar.location.dto.NearbyDriver;
-import com.rydar.location.dto.UserLocation;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,58 +12,81 @@ import org.springframework.stereotype.Service;
 @Service
 public class LocationService {
 
-  private final Map<String, UserLocation> availableDriversLocation = new ConcurrentHashMap<>();
+  private static final long DRIVER_LOCATION_TTL_MS = 600_000L;
+  private static final double METERS_PER_DEGREE_LAT = 111_320.0;
 
-  private static final long TTL_MS = 60_000;
+  private final Map<String, DriverLocation> availableDriversLocation = new ConcurrentHashMap<>();
 
-  public void updateDriverLocation(String id, LocationUpdate locationUpdate) {
+  public void updateDriverLocation(String id, DriverLocationUpdate driverLocationUpdate) {
     long now = System.currentTimeMillis();
-    UserLocation driverLocation =
-        new UserLocation(
-            locationUpdate.latitude(), locationUpdate.longitude(), now, locationUpdate.currRoute());
+    DriverLocation driverLocation =
+        new DriverLocation(
+            driverLocationUpdate.latitude(),
+            driverLocationUpdate.longitude(),
+            now,
+            driverLocationUpdate.currRouteName());
     availableDriversLocation.put(id, driverLocation);
   }
 
   public List<NearbyDriver> findNearbyDrivers(
-      Double latitude, Double longitude, Integer radiusMeters, Integer limit) {
+      double latitude, double longitude, int radiusMeters, int limit) {
 
     final long now = System.currentTimeMillis();
+    cleanupStaleLocations(now);
     BoundingBox riderBounds = getLocationBounds(latitude, longitude, radiusMeters);
 
     return availableDriversLocation.entrySet().stream()
-        .filter(e -> now - e.getValue().updatedAtTimestamp() <= TTL_MS)
         .filter(
             e ->
                 isLocationWithinBounds(
                     e.getValue().latitude(), e.getValue().longitude(), riderBounds))
+        .limit(limit)
         .map(
             e ->
                 new NearbyDriver(
                     e.getKey(),
                     e.getValue().latitude(),
                     e.getValue().longitude(),
-                    e.getValue().curr_route()))
-        .limit(limit)
+                    e.getValue().currRouteName()))
         .toList();
   }
 
-  private static Boolean isLocationWithinBounds(
-      Double latitude, Double longitude, BoundingBox boundingBox) {
+  private void cleanupStaleLocations(long now) {
+    availableDriversLocation
+        .entrySet()
+        .removeIf(e -> now - e.getValue().updatedAtTimestamp() > DRIVER_LOCATION_TTL_MS);
+  }
+
+  private static boolean isLocationWithinBounds(
+      double latitude, double longitude, BoundingBox boundingBox) {
 
     return inRange(latitude, boundingBox.minLat(), boundingBox.maxLat())
         && inRange(longitude, boundingBox.minLng(), boundingBox.maxLng());
   }
 
   private static BoundingBox getLocationBounds(
-      Double latitude, Double longitude, Integer radiusMeters) {
-    double latDelta = radiusMeters / 111_320.0;
-    double lngDelta = radiusMeters / (111_320.0 * Math.cos(Math.toRadians(latitude)));
-    double minLat = latitude - latDelta;
-    double maxLat = latitude + latDelta;
-    double minLng = longitude - lngDelta;
-    double maxLng = longitude + lngDelta;
+      double latitude, double longitude, int radiusMeters) {
+    double latDelta = radiusMeters / METERS_PER_DEGREE_LAT;
+
+    double cosLat = Math.cos(Math.toRadians(latitude));
+    double lngDelta;
+    if (Math.abs(cosLat) < 1e-6) {
+      // Near the poles: longitude spacing collapses, treat as full longitude span.
+      lngDelta = 180.0;
+    } else {
+      lngDelta = radiusMeters / (METERS_PER_DEGREE_LAT * cosLat);
+    }
+
+    double minLat = clamp(latitude - latDelta, -90.0, 90.0);
+    double maxLat = clamp(latitude + latDelta, -90.0, 90.0);
+    double minLng = clamp(longitude - lngDelta, -180.0, 180.0);
+    double maxLng = clamp(longitude + lngDelta, -180.0, 180.0);
 
     return new BoundingBox(minLat, maxLat, minLng, maxLng);
+  }
+
+  private static double clamp(double value, double min, double max) {
+    return Math.max(min, Math.min(max, value));
   }
 
   private static boolean inRange(double value, double min, double max) {

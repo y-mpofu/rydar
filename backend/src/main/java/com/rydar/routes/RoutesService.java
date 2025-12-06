@@ -1,4 +1,4 @@
-package com.rydar.tripRoutes;
+package com.rydar.routes;
 
 import com.rydar.driver.Driver;
 import com.rydar.driver.DriverRepository;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class RoutingService {
+public class RoutesService {
 
   private final DriverRepository driverRepo;
 
-  public RoutingService(DriverRepository driverRepository) {
+  public RoutesService(DriverRepository driverRepository) {
     this.driverRepo = driverRepository;
   }
 
