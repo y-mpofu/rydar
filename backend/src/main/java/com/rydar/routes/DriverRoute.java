@@ -1,4 +1,11 @@
-package com.rydar.routes.dto;
+package com.rydar.routes;
+
+import lombok.Getter;
 
 /** Route object to track drivers' routes\ */
-public record DriverRoute(String routeName,Double latitude, Double longitude, String customComments) {}
+public class DriverRoute {
+  @Getter String routeName;
+  @Getter Double latitude;
+  @Getter Double longitude;
+  @Getter String customComments;
+}
