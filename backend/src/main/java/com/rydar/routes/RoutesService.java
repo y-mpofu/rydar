@@ -30,7 +30,7 @@ public class RoutesService {
             .findByUserId(userId)
             .orElseThrow(
                 () -> new EntityNotFoundException("Driver with ID " + userId + " not found"));
-    DriverRoute route = new DriverRoute();
+    DriverRoute route = new DriverRoute(name, latitude, longitude, customComments);
     driver.getRoutes().add(route);
     driverRepo.save(driver);
   }
