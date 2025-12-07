@@ -24,8 +24,7 @@ public class LocationService {
             driverLocationUpdate.latitude(),
             driverLocationUpdate.longitude(),
             now,
-            driverLocationUpdate.currRouteName(),
-            driverLocationUpdate.customComments());
+            driverLocationUpdate.currRouteName());
     availableDriversLocation.put(id, driverLocation);
   }
 
@@ -48,8 +47,7 @@ public class LocationService {
                     e.getKey(),
                     e.getValue().latitude(),
                     e.getValue().longitude(),
-                    e.getValue().currRouteName(),
-                    e.getValue().customComments()))
+                    e.getValue().currRouteName()))
         .toList();
   }
 

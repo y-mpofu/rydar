@@ -62,4 +62,34 @@ public class RoutesService {
                     .collect(Collectors.toSet()))
         .orElse(Collections.emptySet());
   }
+    /**
+     * Updates the custom comments for a specific route belonging to a driver.
+     *
+     */
+    public void updateCustomComments(UUID userId, String routeName, String customComments) {
+        // Step 1: Validate that custom comments are not empty
+        if (customComments == null || customComments.isBlank()) {
+            throw new IllegalArgumentException("Custom comments cannot be empty");
+        }
+        Driver driver =
+                driverRepo
+                        .findByUserId(userId)
+                        .orElseThrow(
+                                () -> new EntityNotFoundException("Driver with userID " + userId + " not found"));
+        // Step 3: Search through the driver's routes to find the matching route
+        DriverRoute routeToUpdate =
+                driver.getRoutes().stream()
+                        .filter(route -> route.getRouteName().equals(routeName))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new IllegalStateException(
+                                                "Route '" + routeName + "' was not found for driver " + userId));
+
+        // Step 4: Update the custom comments field
+        routeToUpdate.setCustomComments(customComments);
+
+        // Step 5: Save the updated driver back to the database
+        driverRepo.save(driver);
+    }
 }

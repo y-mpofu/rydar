@@ -3,6 +3,8 @@ package com.rydar.routes;
 import com.rydar.routes.dto.AddRouteRequest;
 import java.util.Set;
 import java.util.UUID;
+
+import com.rydar.routes.dto.UpdateCustomCommentsRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,4 +42,17 @@ public class RoutesController {
     routesService.removeRoute(UUID.fromString(userId), request.routeName());
     return ResponseEntity.status(201).build(); // 204 No Content
   }
+    @PutMapping("/CustomCommentsUpdate")
+    public ResponseEntity<Void> updateCustomComments(
+            @RequestBody UpdateCustomCommentsRequest request,
+            @AuthenticationPrincipal String userId) {
+
+        routesService.updateCustomComments(
+                UUID.fromString(userId),
+                request.routeName(),
+                request.customComments());
+
+
+        return ResponseEntity.noContent().build();
+    }
 }
