@@ -25,8 +25,7 @@ public class ProfileService {
     String email = user.getEmail();
     String lastname = user.getLastname();
     String firstname = user.getFirstname();
-    String username = user.getUsername();
 
-    return new GetProfileResponse(username, firstname, lastname, email);
+    return new GetProfileResponse(firstname, lastname, email);
   }
 }

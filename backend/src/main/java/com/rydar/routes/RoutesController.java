@@ -16,7 +16,7 @@ public class RoutesController {
   private final RoutesService routesService;
 
   @GetMapping("/allRoutes")
-  public ResponseEntity<Set<DriverRoute>> getMyRoutes(@AuthenticationPrincipal String userID) {
+  public ResponseEntity<Set<String>> getMyRoutes(@AuthenticationPrincipal String userID) {
     return ResponseEntity.ok(routesService.getRoutes(UUID.fromString(userID)));
   }
 
@@ -24,7 +24,12 @@ public class RoutesController {
   public ResponseEntity<Void> addMyRoute(
       @RequestBody AddRouteRequest request, @AuthenticationPrincipal String userId) {
 
-    routesService.addRoute(UUID.fromString(userId), request.routeName());
+    routesService.addRoute(
+        UUID.fromString(userId),
+        request.routeName(),
+        request.latitude(),
+        request.longitude(),
+        request.customComments());
     return ResponseEntity.status(201).build(); // 201 Created
   }
 

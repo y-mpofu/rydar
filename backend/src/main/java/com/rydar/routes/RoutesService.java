@@ -6,6 +6,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,8 @@ public class RoutesService {
     this.driverRepo = driverRepository;
   }
 
-  public void addRoute(UUID userId, String name) {
+  public void addRoute(
+      UUID userId, String name, Double latitude, Double longitude, String customComments) {
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Route name cannot be empty");
     }
@@ -28,7 +30,7 @@ public class RoutesService {
             .findByUserId(userId)
             .orElseThrow(
                 () -> new EntityNotFoundException("Driver with ID " + userId + " not found"));
-    DriverRoute route = new DriverRoute(name);
+    DriverRoute route = new DriverRoute(name, latitude, longitude, customComments);
     driver.getRoutes().add(route);
     driverRepo.save(driver);
   }
@@ -41,14 +43,23 @@ public class RoutesService {
             .orElseThrow(
                 () -> new EntityNotFoundException("Driver with userID " + userId + " not found"));
 
-    boolean removed = driver.getRoutes().removeIf(route -> route.routeName().equals(name));
+    boolean removed = driver.getRoutes().removeIf(route -> route.getRouteName().equals(name));
     if (!removed) {
       throw new IllegalStateException("Route '" + name + "' was not found for driver " + userId);
     }
     driverRepo.save(driver);
   }
 
-  public Set<DriverRoute> getRoutes(UUID userId) {
-    return driverRepo.findByUserId(userId).map(Driver::getRoutes).orElse(Collections.emptySet());
+  /***Returns the list of route names from the routes data of the given driver,
+   * NOTE: does not include other variables in the routes column */
+  public Set<String> getRoutes(UUID userId) {
+    return driverRepo
+        .findByUserId(userId)
+        .map(
+            driver ->
+                driver.getRoutes().stream()
+                    .map(DriverRoute::getRouteName) // <–– pick only the name
+                    .collect(Collectors.toSet()))
+        .orElse(Collections.emptySet());
   }
 }
