@@ -62,4 +62,17 @@ public class RoutesService {
                     .collect(Collectors.toSet()))
         .orElse(Collections.emptySet());
   }
+
+  public DriverRoute getDriverRoute(String userId, String routeName) {
+    UUID uuid = UUID.fromString(userId);
+
+    return driverRepo
+        .findByUserId(uuid)
+        .flatMap(
+            driver ->
+                driver.getRoutes().stream()
+                    .filter(route -> routeName.equals(route.getRouteName()))
+                    .findFirst())
+        .orElse(null);
+  }
 }
