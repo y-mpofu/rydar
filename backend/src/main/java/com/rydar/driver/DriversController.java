@@ -3,6 +3,7 @@ package com.rydar.driver;
 import com.rydar.location.LocationService;
 import com.rydar.location.dto.DriverLocationUpdate;
 import com.rydar.location.dto.NearbyDriversResponse;
+import com.rydar.routes.DriverRoute;
 import com.rydar.routes.RoutesService;
 import com.rydar.routes.dto.AddRouteRequest;
 import jakarta.validation.Valid;
@@ -60,8 +61,8 @@ public class DriversController {
     routesService.addRoute(
         UUID.fromString(userId),
         request.routeName(),
-        request.latitude(),
-        request.longitude(),
+        request.destinationLat(),
+        request.destinationLong(),
         request.customComments());
     return ResponseEntity.status(201).build(); // 201 Created
   }
@@ -72,5 +73,14 @@ public class DriversController {
 
     routesService.removeRoute(UUID.fromString(userId), routeName);
     return ResponseEntity.noContent().build();
+  }
+
+  @PutMapping("/me/routes/{routeName}")
+  public ResponseEntity<DriverRoute> updateRoute(
+      @PathVariable("routeName") String currRouteName,
+      @RequestBody AddRouteRequest request,
+      @AuthenticationPrincipal String userId) {
+    DriverRoute newRoute = routesService.updateDriverRoute(userId, currRouteName, request);
+    return ResponseEntity.ok(newRoute);
   }
 }

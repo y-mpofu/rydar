@@ -73,7 +73,7 @@ public class LocationService {
     double cosLat = Math.cos(Math.toRadians(latitude));
     double lngDelta;
     if (Math.abs(cosLat) < 1e-6) {
-      // Near the poles: longitude spacing collapses, treat as full longitude span.
+      // Near the poles: destinationLong spacing collapses, treat as full destinationLong span.
       lngDelta = 180.0;
     } else {
       lngDelta = radiusMeters / (METERS_PER_DEGREE_LAT * cosLat);
