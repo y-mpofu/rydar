@@ -47,9 +47,7 @@ public class DriversController {
       @RequestParam(required = false) String destinationName) {
 
     var nearby = locationService.findNearbyDrivers(latitude, longitude, radiusMeters, limit);
-
     var filtered = locationService.filterDriversByDestinationName(nearby, destinationName);
-
     return ResponseEntity.ok(new NearbyDriversResponse(filtered));
   }
 
