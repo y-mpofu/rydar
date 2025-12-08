@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class DriverRoute {
 
   private String routeName;
-  private Double latitude;
-  private Double longitude;
+  private Double destinationLat;
+  private Double destinationLong;
   private String customComments;
 }

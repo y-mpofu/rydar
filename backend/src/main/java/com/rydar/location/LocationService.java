@@ -53,6 +53,24 @@ public class LocationService {
         .toList();
   }
 
+  public List<NearbyDriver> filterDriversByDestinationName(
+      List<NearbyDriver> drivers, String destinationName) {
+
+    if (destinationName == null || destinationName.isBlank()) {
+      return drivers; // nothing to filter by
+    }
+
+    String normalized = destinationName.trim().toLowerCase();
+
+    return drivers.stream()
+        .filter(
+            d -> {
+              if (d.currRouteName() == null) return false;
+              return d.currRouteName().trim().toLowerCase().equals(normalized);
+            })
+        .toList();
+  }
+
   private void cleanupStaleLocations(long now) {
     availableDriversLocation
         .entrySet()
@@ -73,7 +91,7 @@ public class LocationService {
     double cosLat = Math.cos(Math.toRadians(latitude));
     double lngDelta;
     if (Math.abs(cosLat) < 1e-6) {
-      // Near the poles: longitude spacing collapses, treat as full longitude span.
+      // Near the poles: destinationLong spacing collapses, treat as full destinationLong span.
       lngDelta = 180.0;
     } else {
       lngDelta = radiusMeters / (METERS_PER_DEGREE_LAT * cosLat);

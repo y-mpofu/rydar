@@ -2,6 +2,7 @@ package com.rydar.routes;
 
 import com.rydar.driver.Driver;
 import com.rydar.driver.DriverRepository;
+import com.rydar.routes.dto.AddRouteRequest;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.Set;
@@ -61,5 +62,59 @@ public class RoutesService {
                     .map(DriverRoute::getRouteName) // <–– pick only the name
                     .collect(Collectors.toSet()))
         .orElse(Collections.emptySet());
+  }
+
+  public DriverRoute getDriverRoute(String userId, String routeName) {
+    UUID uuid = UUID.fromString(userId);
+
+    return driverRepo
+        .findByUserId(uuid)
+        .flatMap(
+            driver ->
+                driver.getRoutes().stream()
+                    .filter(route -> routeName.equals(route.getRouteName()))
+                    .findFirst())
+        .orElse(null);
+  }
+
+  public DriverRoute updateDriverRoute(
+      String userId, String currRouteName, AddRouteRequest request) {
+    UUID uuid = UUID.fromString(userId);
+
+    Driver driver =
+        driverRepo
+            .findByUserId(uuid)
+            .orElseThrow(
+                () -> new EntityNotFoundException("Driver with userID " + uuid + " not found"));
+
+    DriverRoute existingRoute =
+        driver.getRoutes().stream()
+            .filter(route -> currRouteName.equals(route.getRouteName()))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Route '" + currRouteName + "' was not found for driver " + uuid));
+
+    // Build new route using request fields if provided, otherwise keep existing
+    DriverRoute updatedRoute =
+        DriverRoute.builder()
+            .routeName(orElse(request.routeName(), existingRoute.getRouteName()))
+            .destinationLat(orElse(request.destinationLat(), existingRoute.getDestinationLat()))
+            .destinationLong(orElse(request.destinationLong(), existingRoute.getDestinationLong()))
+            .customComments(orElse(request.customComments(), existingRoute.getCustomComments()))
+            .build();
+
+    // Remove old, add new
+    driver.getRoutes().remove(existingRoute);
+    driver.getRoutes().add(updatedRoute);
+
+    driverRepo.save(driver);
+    return updatedRoute;
+  }
+
+  // Utility method to fallback to old value when null
+  private static <T> T orElse(T newValue, T oldValue) {
+    return newValue != null ? newValue : oldValue;
   }
 }
