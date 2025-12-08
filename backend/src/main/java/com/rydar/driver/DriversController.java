@@ -43,10 +43,14 @@ public class DriversController {
       @RequestParam @NotNull @DecimalMin(value = "-180.0") @DecimalMax(value = "180.0")
           Double longitude,
       @RequestParam @NotNull @Positive Integer radiusMeters,
-      @RequestParam(defaultValue = "20") @Positive Integer limit) {
+      @RequestParam(defaultValue = "20") @Positive Integer limit,
+      @RequestParam(required = false) String destinationName) {
 
-    var nearbyDrivers = locationService.findNearbyDrivers(latitude, longitude, radiusMeters, limit);
-    return ResponseEntity.ok(new NearbyDriversResponse(nearbyDrivers));
+    var nearby = locationService.findNearbyDrivers(latitude, longitude, radiusMeters, limit);
+
+    var filtered = locationService.filterDriversByDestinationName(nearby, destinationName);
+
+    return ResponseEntity.ok(new NearbyDriversResponse(filtered));
   }
 
   @GetMapping("/me/routes")
