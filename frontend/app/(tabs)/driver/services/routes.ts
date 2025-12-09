@@ -10,6 +10,30 @@ export type DriverRoute = {
 };
 
 const ROUTES_METADATA_KEY = "driver_routes_metadata";
+const SELECTED_ROUTE_KEY = "driver_selected_route";
+
+// Helper: Get selected/active route
+export async function getSelectedRoute(): Promise<string | null> {
+    try {
+        return await SecureStore.getItemAsync(SELECTED_ROUTE_KEY);
+    } catch (err) {
+        console.error("Failed to get selected route:", err);
+        return null;
+    }
+}
+
+// Helper: Set selected/active route
+export async function setSelectedRoute(routeName: string | null): Promise<void> {
+    try {
+        if (routeName === null) {
+            await SecureStore.deleteItemAsync(SELECTED_ROUTE_KEY);
+        } else {
+            await SecureStore.setItemAsync(SELECTED_ROUTE_KEY, routeName);
+        }
+    } catch (err) {
+        console.error("Failed to set selected route:", err);
+    }
+}
 
 // Helper: Store route metadata locally (comments + coordinates)
 async function saveRouteMetadata(route: DriverRoute) {
@@ -158,3 +182,14 @@ export async function getProfile(): Promise<UserProfile> {
 
     return res.data as UserProfile;
 }
+
+// 👇 DEFAULT EXPORT to fix warning
+export default {
+    getAllRoutes,
+    addNewRoute,
+    deleteRoute,
+    updateRoute,
+    getProfile,
+    getSelectedRoute,
+    setSelectedRoute,
+};
