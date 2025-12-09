@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import Navbar from "./Navbar";
 import ViewAccountPopup from "./ViewAccountPopup";
+import DriverDetailPopup from "./DriverDetailPopup";
 import { driversNearby, type NearbyDriver } from "../services/drivers";
 import { searchPlaces, type PlaceResult } from "../../../../scripts/mapboxSearch";
 
@@ -32,6 +33,8 @@ export default function HomeScreen() {
     const [results, setResults] = useState<PlaceResult[]>([]);
     const [query, setQuery] = useState("");
     const [destination, setDestination] = useState<Destination | null>(null);
+    const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(null);
+    const [showDriverDetail, setShowDriverDetail] = useState(false);
 
     // --------------------------
     // AUTOCOMPLETE SEARCH
@@ -93,6 +96,44 @@ export default function HomeScreen() {
     }, []);
 
     // --------------------------
+    // 👇 NEW: POLL FOR NEARBY DRIVERS EVERY 3 SECONDS
+    // --------------------------
+    useEffect(() => {
+        if (!destination) return; // Only poll when destination is selected
+
+        let isMounted = true;
+
+        const fetchDrivers = async () => {
+            try {
+                const res = await driversNearby(
+                    destination.latitude,
+                    destination.longitude,
+                    1000,
+                    20,
+                    destination.name
+                );
+                if (isMounted) {
+                    setNearby(res.nearbyDrivers);
+                    console.log("Updated nearby drivers:", res.nearbyDrivers.length);
+                }
+            } catch (err) {
+                console.error("Failed to poll driversNearby:", err);
+            }
+        };
+
+        // Initial fetch
+        fetchDrivers();
+
+        // Poll every 3 seconds
+        const interval = setInterval(fetchDrivers, 3000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [destination]);
+
+    // --------------------------
     // RECENTER (to current region – user or destination)
     // --------------------------
     const handleRecenter = () => {
@@ -101,19 +142,26 @@ export default function HomeScreen() {
     };
 
     // --------------------------
-    // CLEAR DESTINATION + RESET SEARCH STATE
+    // 👇 UPDATED: STOP CHECKING - Clear destination + reset to home
     // --------------------------
-    const handleClearDestination = () => {
+    const handleStopChecking = () => {
         setDestination(null);
         setNearby([]);
         setQuery("");
         setResults([]);
 
-        // Optionally recenter back to user's current region
+        // Recenter back to user's current location
         if (userRegion) {
             setRegion(userRegion);
             mapRef.current?.animateToRegion(userRegion, 600);
         }
+    };
+
+    // --------------------------
+    // CLEAR DESTINATION (X button on badge)
+    // --------------------------
+    const handleClearDestination = () => {
+        handleStopChecking(); // Same as stop checking
     };
 
     // --------------------------
@@ -146,20 +194,7 @@ export default function HomeScreen() {
         setQuery("");
         setResults([]);
 
-        // Fetch nearby drivers for this destination
-        try {
-            const res = await driversNearby(
-                place.latitude,
-                place.longitude,
-                1000,
-                20,
-                place.name
-            );
-            setNearby(res.nearbyDrivers);
-        } catch (err) {
-            console.error("Failed to load driversNearby for destination:", err);
-            setNearby([]);
-        }
+        // Initial fetch will happen in the polling useEffect
     };
 
     // --------------------------
@@ -231,6 +266,14 @@ export default function HomeScreen() {
                 </View>
             )}
 
+            {/* 👇 NEW: STOP CHECKING BUTTON */}
+            {destination && (
+                <TouchableOpacity style={styles.stopCheckingButton} onPress={handleStopChecking}>
+                    <Ionicons name="stop-circle" size={20} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.stopCheckingText}>Stop Checking</Text>
+                </TouchableOpacity>
+            )}
+
             {/* 🗺️ MAP */}
             {region && (
                 <>
@@ -262,6 +305,10 @@ export default function HomeScreen() {
                                     longitude: driver.longitude,
                                 }}
                                 title={driver.currRouteName || "Driver"}
+                                onPress={() => {
+                                    setSelectedDriver(driver);
+                                    setShowDriverDetail(true);
+                                }}
                             >
                                 <View style={styles.driverMarker}>
                                     <Ionicons name="car-sharp" size={28} />
@@ -276,6 +323,16 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </>
             )}
+
+            {/* Driver Detail Popup */}
+            <DriverDetailPopup
+                visible={showDriverDetail}
+                driver={selectedDriver}
+                onClose={() => {
+                    setShowDriverDetail(false);
+                    setSelectedDriver(null);
+                }}
+            />
         </View>
     );
 }
@@ -387,5 +444,29 @@ const styles = StyleSheet.create({
 
     clearButton: {
         padding: 4,
+    },
+
+    // 👇 NEW: Stop Checking Button
+    stopCheckingButton: {
+        position: "absolute",
+        bottom: 30,
+        left: 20,
+        backgroundColor: "#ef4444", // Red color
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 25,
+        flexDirection: "row",
+        alignItems: "center",
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 2 },
+    },
+
+    stopCheckingText: {
+        color: "#fff",
+        fontWeight: "600",
+        fontSize: 15,
     },
 });
