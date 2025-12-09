@@ -9,8 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "extra": {
-      "MAPBOX_KEY": "pk.eyJ1Ijoic2lpc28iLCJhIjoiY21pdzl1bmZrMXp2OTNmcTBpbTYyd2hqcyJ9.klbmlBth7KWKtiyFNfccjA",
-      "GOOGLE_PLACES_KEY": "AIzaSyC11ViDDBz9jFvU22MNdtLTtj1mK85o2Dk"
+      "MAPBOX_KEY": "",
+      "GOOGLE_PLACES_KEY": ""
     },
     "ios": {
       "supportsTablet": true
