@@ -1,13 +1,43 @@
-import { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, FlatList, Keyboard } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import {
+  BorderRadius,
+  Colors,
+  FontWeights,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
+import AnimatedPressable from "@/components/AnimatedPressable";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import Toast from "@/components/Toast";
+import * as haptics from "@/utils/haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
-import Navbar from "./Navbar";
-import ViewAccountPopup from "./ViewAccountPopup";
-import DriverDetailPopup from "./DriverDetailPopup";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  Keyboard,
+  RefreshControl,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import {
+  searchPlaces,
+  type PlaceResult,
+} from "../../../../scripts/mapboxSearch";
 import { driversNearby, type NearbyDriver } from "../services/drivers";
-import { searchPlaces, type PlaceResult } from "../../../../scripts/mapboxSearch";
+import { getProfile, type UserProfile } from "../services/profile";
+import DriverDetailPopup from "./DriverDetailPopup";
+import ViewAccountPopup from "./ViewAccountPopup";
+
+const { width, height } = Dimensions.get("window");
 
 type Region = {
     latitude: number;
@@ -23,8 +53,47 @@ type Destination = {
     address?: string;
 };
 
+// Avatar component with initials
+const Avatar = ({ 
+  firstname, 
+  lastname, 
+  size = 52 
+}: { 
+  firstname?: string; 
+  lastname?: string; 
+  size?: number;
+}) => {
+  const initials = firstname && lastname 
+    ? `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase()
+    : firstname 
+    ? firstname.charAt(0).toUpperCase()
+    : null;
+
+  return (
+    <LinearGradient
+      colors={[Colors.primary.main, Colors.primary.dark]}
+      style={[
+        styles.avatarGradient,
+        { width: size, height: size, borderRadius: size / 2 },
+      ]}
+    >
+      {initials ? (
+        <Text style={[styles.avatarText, { fontSize: size * 0.4 }]}>
+          {initials}
+        </Text>
+      ) : (
+        <Ionicons name="person" size={size * 0.45} color={Colors.text.inverse} />
+      )}
+    </LinearGradient>
+  );
+};
+
 export default function HomeScreen() {
     const mapRef = useRef<MapView | null>(null);
+  const searchInputRef = useRef<TextInput>(null);
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
     const [region, setRegion] = useState<Region | null>(null);
     const [userRegion, setUserRegion] = useState<Region | null>(null);
@@ -35,10 +104,86 @@ export default function HomeScreen() {
     const [destination, setDestination] = useState<Destination | null>(null);
     const [selectedDriver, setSelectedDriver] = useState<NearbyDriver | null>(null);
     const [showDriverDetail, setShowDriverDetail] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [greeting, setGreeting] = useState("Good morning");
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(false);
+  const [hasSearchedOnce, setHasSearchedOnce] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "info" as "success" | "error" | "warning" | "info" });
 
-    // --------------------------
+  // Load user profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+      } catch (err) {
+        console.log("Failed to load profile:", err);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  // Set greeting based on time of day
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good morning");
+    else if (hour < 17) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
+
+  // Subtle pulse animation for search card
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.02,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+
+  // Animate to map view when destination is set
+  useEffect(() => {
+    if (destination) {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [destination]);
+
     // AUTOCOMPLETE SEARCH
-    // --------------------------
     useEffect(() => {
         const timeout = setTimeout(async () => {
             if (query.length < 2) {
@@ -61,9 +206,7 @@ export default function HomeScreen() {
         return () => clearTimeout(timeout);
     }, [query, region]);
 
-    // --------------------------
-    // USER LOCATION TRACKING (for blue dot + initial center)
-    // --------------------------
+  // USER LOCATION TRACKING
     useEffect(() => {
         (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
@@ -83,10 +226,7 @@ export default function HomeScreen() {
                         longitudeDelta: 0.025,
                     };
 
-                    // remember user's region
                     setUserRegion(initialRegion);
-
-                    // only set as map region on first load
                     setRegion((prev) => (prev ? prev : initialRegion));
                 }
             );
@@ -95,16 +235,19 @@ export default function HomeScreen() {
         })();
     }, []);
 
-    // --------------------------
-    // 👇 NEW: POLL FOR NEARBY DRIVERS EVERY 3 SECONDS
-    // --------------------------
+  // POLL FOR NEARBY DRIVERS
     useEffect(() => {
-        if (!destination) return; // Only poll when destination is selected
+    if (!destination) return;
 
         let isMounted = true;
+        let isFirstFetch = true;
 
         const fetchDrivers = async () => {
             try {
+                if (isFirstFetch) {
+                    setIsLoadingDrivers(true);
+                }
+                
                 const res = await driversNearby(
                     destination.latitude,
                     destination.longitude,
@@ -114,17 +257,32 @@ export default function HomeScreen() {
                 );
                 if (isMounted) {
                     setNearby(res.nearbyDrivers);
-                    console.log("Updated nearby drivers:", res.nearbyDrivers.length);
+                    setHasSearchedOnce(true);
+                    
+                    // Haptic feedback when drivers found for first time
+                    if (isFirstFetch && res.nearbyDrivers.length > 0) {
+                        haptics.success();
+                    }
                 }
             } catch (err) {
                 console.error("Failed to poll driversNearby:", err);
+                if (isMounted && isFirstFetch) {
+                    setToast({
+                        visible: true,
+                        message: "Couldn't search for drivers. Please check your connection.",
+                        type: "error",
+                    });
+                    haptics.error();
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingDrivers(false);
+                    isFirstFetch = false;
+                }
             }
         };
 
-        // Initial fetch
         fetchDrivers();
-
-        // Poll every 3 seconds
         const interval = setInterval(fetchDrivers, 3000);
 
         return () => {
@@ -133,56 +291,32 @@ export default function HomeScreen() {
         };
     }, [destination]);
 
-    // --------------------------
-    // RECENTER (to current region – user or destination)
-    // --------------------------
     const handleRecenter = () => {
-        if (!region || !mapRef.current) return;
-        mapRef.current.animateToRegion(region, 800);
+    if (!userRegion || !mapRef.current) return;
+    haptics.lightTap();
+    mapRef.current.animateToRegion(userRegion, 800);
     };
 
-    // --------------------------
-    // 👇 UPDATED: STOP CHECKING - Clear destination + reset to home
-    // --------------------------
     const handleStopChecking = () => {
         setDestination(null);
         setNearby([]);
         setQuery("");
         setResults([]);
+    setIsSearching(false);
+    setHasSearchedOnce(false);
+    haptics.mediumTap();
 
-        // Recenter back to user's current location
         if (userRegion) {
             setRegion(userRegion);
             mapRef.current?.animateToRegion(userRegion, 600);
         }
     };
 
-    // --------------------------
-    // CLEAR DESTINATION (X button on badge)
-    // --------------------------
-    const handleClearDestination = () => {
-        handleStopChecking(); // Same as stop checking
-    };
-
-    // --------------------------
-    // HANDLE PLACE SELECTION
-    // Take user there, zoom in, drop marker, clear results, load nearby drivers
-    // --------------------------
     const handleSelectPlace = async (place: PlaceResult) => {
         Keyboard.dismiss();
+    setIsSearching(false);
+    haptics.selection();
 
-        const destRegion: Region = {
-            latitude: place.latitude,
-            longitude: place.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-        };
-
-        // Center map on the destination and zoom in
-        setRegion(destRegion);
-        mapRef.current?.animateToRegion(destRegion, 600);
-
-        // Save destination so we can place a marker + show address
         setDestination({
             latitude: place.latitude,
             longitude: place.longitude,
@@ -190,93 +324,213 @@ export default function HomeScreen() {
             address: place.address,
         });
 
-        // Clear search input and results
+    if (userRegion) {
+      setTimeout(() => {
+        mapRef.current?.animateToRegion(userRegion, 600);
+      }, 500);
+    }
+
         setQuery("");
         setResults([]);
+  };
 
-        // Initial fetch will happen in the polling useEffect
-    };
+  const handleStartSearch = () => {
+    haptics.lightTap();
+    setIsSearching(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
+  };
 
-    // --------------------------
-    // LABEL FOR DRIVER COUNT
-    // --------------------------
+  const handleCancelSearch = () => {
+    haptics.lightTap();
+    setIsSearching(false);
+    setQuery("");
+    setResults([]);
+    Keyboard.dismiss();
+  };
+
     const driverCountLabel =
         destination != null
-            ? nearby.length === 0
-                ? "No drivers found"
-                : `${nearby.length} driver${nearby.length > 1 ? "s" : ""} nearby`
-            : "";
+            ? isLoadingDrivers
+        ? "Searching for drivers..."
+        : nearby.length === 0
+        ? "No drivers found nearby"
+        : `${nearby.length} driver${nearby.length > 1 ? "s" : ""} heading your way`
+      : "";
 
-    return (
-        <View style={styles.container}>
-            {/* 🔵 Navbar */}
-            <Navbar
-                onUserPress={() => setShowAccount(true)}
-                onSearch={setQuery}
+  // Home/Search View - Minimal Design
+  const renderHomeView = () => (
+    <Animated.View
+      style={[
+        styles.homeContainer,
+        {
+          opacity: fadeAnim,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -height],
+              }),
+            },
+          ],
+        },
+      ]}
+      pointerEvents={destination ? "none" : "auto"}
+    >
+      <LinearGradient
+        colors={["#0C4A6E", "#0E7490", "#06B6D4"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.homeGradient}
+      >
+        <StatusBar barStyle="light-content" />
+
+        {/* Decorative circles */}
+        <View style={styles.decorativeCircle1} />
+        <View style={styles.decorativeCircle2} />
+        <View style={styles.decorativeCircle3} />
+
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greetingText}>{greeting}</Text>
+            {profile?.firstname && (
+              <Text style={styles.nameText}>{profile.firstname}</Text>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.profileButton}
+            onPress={() => {
+              haptics.lightTap();
+              setShowAccount(true);
+            }}
+          >
+            <Avatar firstname={profile?.firstname} lastname={profile?.lastname} size={52} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Main Content - Centered */}
+        <View style={styles.mainContent}>
+          <Text style={styles.titleText}>Where to?</Text>
+
+          {/* Search Card */}
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <TouchableOpacity
+              style={styles.searchCard}
+              onPress={handleStartSearch}
+              activeOpacity={0.95}
+            >
+              <View style={styles.searchIconContainer}>
+                <Ionicons name="search" size={26} color={Colors.primary.main} />
+              </View>
+              <Text style={styles.searchPlaceholder}>Enter destination</Text>
+              <View style={styles.searchArrow}>
+                <Ionicons name="arrow-forward" size={20} color={Colors.text.tertiary} />
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        {/* Bottom hint */}
+        <View style={styles.bottomHint}>
+          <View style={styles.hintDot} />
+          <Text style={styles.hintText}>Find drivers on your route</Text>
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  );
+
+  // Search Modal
+  const renderSearchModal = () =>
+    isSearching && (
+      <View style={styles.searchModal}>
+        <LinearGradient
+          colors={["#0C4A6E", "#0E7490"]}
+          style={styles.searchModalGradient}
+        >
+          {/* Search Header */}
+          <View style={styles.searchModalHeader}>
+            <TouchableOpacity onPress={handleCancelSearch} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color={Colors.text.inverse} />
+            </TouchableOpacity>
+            <View style={styles.searchInputContainer}>
+              <Ionicons name="search" size={20} color={Colors.text.tertiary} />
+              <TextInput
+                ref={searchInputRef}
+                style={styles.searchInput}
+                placeholder="Where are you going?"
+                placeholderTextColor={Colors.text.tertiary}
                 value={query}
-            />
-
-            <ViewAccountPopup
-                visible={showAccount}
-                onClose={() => setShowAccount(false)}
-            />
-
-            {/* 🔽 AUTOCOMPLETE DROPDOWN */}
-            {results.length > 0 && (
-                <View style={styles.dropdown}>
-                    <FlatList
-                        data={results}
-                        keyboardShouldPersistTaps="handled"
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                onPress={() => handleSelectPlace(item)}
-                                style={styles.dropdownItem}
-                            >
-                                <Text style={styles.dropdownTitle}>{item.name}</Text>
-                                <Text style={styles.dropdownSubtitle}>{item.address}</Text>
+                onChangeText={setQuery}
+                autoFocus={false}
+                returnKeyType="search"
+                autoCorrect={false}
+                autoCapitalize="none"
+              />
+              {query.length > 0 && (
+                <TouchableOpacity onPress={() => setQuery("")}>
+                  <Ionicons name="close-circle" size={20} color={Colors.text.tertiary} />
                             </TouchableOpacity>
                         )}
-                    />
-                </View>
-            )}
-
-            {/* 🏁 DESTINATION + DRIVER COUNT BADGE */}
-            {destination && (
-                <View style={styles.driverCountBadge}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.destinationName} numberOfLines={1}>
-                            {destination.name}
-                        </Text>
-                        {destination.address && (
-                            <Text style={styles.destinationAddress} numberOfLines={1}>
-                                {destination.address}
-                            </Text>
-                        )}
-
-                        <View style={styles.driverCountRow}>
-                            <Ionicons name="car-sport-outline" size={16} color="#111827" />
-                            <Text style={styles.driverCountText}>{driverCountLabel}</Text>
                         </View>
                     </View>
 
-                    <TouchableOpacity onPress={handleClearDestination} style={styles.clearButton}>
-                        <Ionicons name="close" size={18} color="#6b7280" />
-                    </TouchableOpacity>
+          {/* Search Results */}
+          <ScrollView
+            style={styles.searchResults}
+            keyboardShouldPersistTaps="always"
+            showsVerticalScrollIndicator={false}
+          >
+            {query.length < 2 ? (
+              <View style={styles.searchHint}>
+                <Ionicons name="location-outline" size={48} color="rgba(255,255,255,0.3)" />
+                <Text style={styles.searchHintText}>
+                  Start typing to search
+                </Text>
+              </View>
+            ) : results.length === 0 ? (
+              <View style={styles.searchHint}>
+                <Ionicons name="search-outline" size={48} color="rgba(255,255,255,0.3)" />
+                <Text style={styles.searchHintText}>Searching...</Text>
+              </View>
+            ) : (
+              results.map((item) => (
+                <AnimatedPressable
+                  key={item.id}
+                  onPress={() => handleSelectPlace(item)}
+                  style={styles.resultItem}
+                  hapticType="selection"
+                  scaleValue={0.98}
+                >
+                  <View style={styles.resultIcon}>
+                    <Ionicons name="location" size={20} color={Colors.primary.light} />
+                  </View>
+                  <View style={styles.resultText}>
+                    <Text style={styles.resultTitle}>{item.name}</Text>
+                    <Text style={styles.resultSubtitle}>{item.address}</Text>
                 </View>
+                </AnimatedPressable>
+              ))
             )}
+          </ScrollView>
+        </LinearGradient>
+      </View>
+    );
 
-            {/* 👇 NEW: STOP CHECKING BUTTON */}
-            {destination && (
-                <TouchableOpacity style={styles.stopCheckingButton} onPress={handleStopChecking}>
-                    <Ionicons name="stop-circle" size={20} color="#fff" style={{ marginRight: 6 }} />
-                    <Text style={styles.stopCheckingText}>Stop Checking</Text>
-                </TouchableOpacity>
-            )}
-
-            {/* 🗺️ MAP */}
+  // Map View (shown when destination is set)
+  const renderMapView = () => (
+    <Animated.View
+      style={[
+        styles.mapContainer,
+        {
+          opacity: slideAnim,
+        },
+      ]}
+      pointerEvents={destination ? "auto" : "none"}
+    >
+      {/* Map */}
             {region && (
-                <>
                     <MapView
                         ref={mapRef}
                         style={styles.map}
@@ -284,7 +538,7 @@ export default function HomeScreen() {
                         showsUserLocation={true}
                         showsMyLocationButton={false}
                     >
-                        {/* 📍 Destination marker */}
+          {/* Destination marker */}
                         {destination && (
                             <Marker
                                 coordinate={{
@@ -296,7 +550,7 @@ export default function HomeScreen() {
                             />
                         )}
 
-                        {/* 🚗 Drivers returned from /drivers/nearby */}
+          {/* Driver markers */}
                         {nearby.map((driver) => (
                             <Marker
                                 key={driver.userId}
@@ -311,20 +565,105 @@ export default function HomeScreen() {
                                 }}
                             >
                                 <View style={styles.driverMarker}>
-                                    <Ionicons name="car-sharp" size={28} />
+                <LinearGradient
+                  colors={[Colors.primary.main, Colors.primary.dark]}
+                  style={styles.driverMarkerGradient}
+                >
+                  <Ionicons name="car" size={18} color={Colors.text.inverse} />
+                </LinearGradient>
                                 </View>
                             </Marker>
                         ))}
                     </MapView>
+      )}
 
-                    {/* 🔵 RECENTER BUTTON */}
-                    <TouchableOpacity style={styles.recenterButton} onPress={handleRecenter}>
-                        <Ionicons name="locate" size={28} color="black" />
+      {/* Top Destination Card */}
+      {destination && (
+        <View style={styles.destinationCard}>
+          <View style={styles.destinationHeader}>
+            <TouchableOpacity
+              onPress={handleStopChecking}
+              style={styles.destinationBackButton}
+            >
+              <Ionicons name="arrow-back" size={22} color={Colors.text.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.destinationInfo}
+              onPress={() => {
+                if (mapRef.current && destination) {
+                  mapRef.current.animateToRegion(
+                    {
+                      latitude: destination.latitude,
+                      longitude: destination.longitude,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    },
+                    600
+                  );
+                }
+              }}
+            >
+              <Text style={styles.destinationLabel}>Going to</Text>
+              <View style={styles.destinationNameRow}>
+                <Text style={styles.destinationName} numberOfLines={1}>
+                  {destination.name}
+                </Text>
+                <Ionicons name="navigate" size={14} color={Colors.primary.main} />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowAccount(true)}
+              style={styles.destinationProfileButton}
+            >
+              <Avatar firstname={profile?.firstname} lastname={profile?.lastname} size={40} />
                     </TouchableOpacity>
-                </>
-            )}
+          </View>
 
-            {/* Driver Detail Popup */}
+          {/* Driver Status */}
+          <View style={styles.driverStatus}>
+            {isLoadingDrivers ? (
+              <LoadingSpinner size={18} color={Colors.primary.main} />
+            ) : (
+              <View
+                style={[
+                  styles.statusDot,
+                  nearby.length > 0 ? styles.statusDotActive : styles.statusDotEmpty,
+                ]}
+              />
+            )}
+            <Text style={styles.statusText}>{driverCountLabel}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Recenter Button */}
+      <TouchableOpacity style={styles.recenterButton} onPress={handleRecenter}>
+        <Ionicons name="locate" size={24} color={Colors.primary.main} />
+      </TouchableOpacity>
+
+      {/* Stop Button */}
+      {destination && (
+        <TouchableOpacity style={styles.stopButton} onPress={handleStopChecking}>
+          <LinearGradient
+            colors={[Colors.accent.error, "#DC2626"]}
+            style={styles.stopButtonGradient}
+          >
+            <Ionicons name="close" size={22} color={Colors.text.inverse} />
+            <Text style={styles.stopButtonText}>Cancel</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+    </Animated.View>
+  );
+
+  return (
+    <View style={styles.container}>
+      {renderMapView()}
+      {renderHomeView()}
+      {renderSearchModal()}
+
+      <ViewAccountPopup visible={showAccount} onClose={() => setShowAccount(false)} />
+
             <DriverDetailPopup
                 visible={showDriverDetail}
                 driver={selectedDriver}
@@ -333,140 +672,387 @@ export default function HomeScreen() {
                     setSelectedDriver(null);
                 }}
             />
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onDismiss={() => setToast((prev) => ({ ...prev, visible: false }))}
+      />
         </View>
     );
 }
 
-// --------------------------
-// 💅 STYLES
-// --------------------------
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    map: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.dark,
+  },
 
-    dropdown: {
-        position: "absolute",
-        top: 110,
-        width: "90%",
-        alignSelf: "center",
-        backgroundColor: "white",
-        borderRadius: 12,
-        paddingVertical: 6,
-        zIndex: 100,
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 10,
-    },
+  // Avatar
+  avatarGradient: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    color: Colors.text.inverse,
+    fontWeight: FontWeights.semiBold,
+    letterSpacing: 0.5,
+  },
 
-    dropdownItem: {
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        borderBottomWidth: 1,
-        borderColor: "#eee",
-    },
+  // Home View Styles
+  homeContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+  },
+  homeGradient: {
+    flex: 1,
+    paddingTop: 70,
+    paddingHorizontal: Spacing.xl,
+  },
 
-    dropdownTitle: {
-        fontWeight: "600",
-        fontSize: 16,
-    },
+  // Decorative elements
+  decorativeCircle1: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    top: -100,
+    right: -100,
+  },
+  decorativeCircle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    bottom: 100,
+    left: -50,
+  },
+  decorativeCircle3: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    top: height * 0.4,
+    right: -30,
+  },
 
-    dropdownSubtitle: {
-        color: "#666",
-        fontSize: 14,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  greetingContainer: {
+    flex: 1,
+  },
+  greetingText: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.lg,
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  nameText: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.xl,
+    color: Colors.text.inverse,
         marginTop: 2,
     },
+  profileButton: {
+    ...Shadows.glow,
+    borderRadius: BorderRadius.full,
+  },
 
-    driverMarker: {
-        backgroundColor: "white",
-        padding: 4,
-        borderRadius: 20,
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-    },
+  // Main content
+  mainContent: {
+    flex: 1,
+    justifyContent: "center",
+    paddingBottom: 80,
+  },
+  titleText: {
+    fontWeight: FontWeights.bold,
+    fontSize: 42,
+    color: Colors.text.inverse,
+    marginBottom: Spacing["2xl"],
+    letterSpacing: -1,
+  },
 
-    recenterButton: {
+  // Search Card
+  searchCard: {
+        flexDirection: "row",
+        alignItems: "center",
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius["2xl"],
+    padding: Spacing.lg,
+    ...Shadows.xl,
+  },
+  searchIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.xl,
+    backgroundColor: `${Colors.primary.main}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.lg,
+  },
+  searchPlaceholder: {
+    flex: 1,
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.secondary,
+  },
+  searchArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background.lightSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  // Bottom hint
+  bottomHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 40,
+    gap: Spacing.sm,
+  },
+  hintDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.primary.light,
+  },
+  hintText: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: "rgba(255, 255, 255, 0.6)",
+  },
+
+  // Search Modal
+  searchModal: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+  searchModalGradient: {
+    flex: 1,
+    paddingTop: 60,
+  },
+  searchModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
+    paddingVertical: 8,
+  },
+  searchResults: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
+  searchHint: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 80,
+  },
+  searchHintText: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: "rgba(255, 255, 255, 0.5)",
+    marginTop: Spacing.lg,
+    textAlign: "center",
+  },
+  resultItem: {
+        flexDirection: "row",
+        alignItems: "center",
+    paddingVertical: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+  },
+  resultIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: "rgba(6, 182, 212, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  resultText: {
+    flex: 1,
+  },
+  resultTitle: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
+    marginBottom: 4,
+  },
+  resultSubtitle: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: "rgba(255, 255, 255, 0.5)",
+  },
+
+  // Map View Styles
+  mapContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  map: {
+    flex: 1,
+  },
+  driverMarker: {
+    ...Shadows.glow,
+    borderRadius: BorderRadius.full,
+  },
+  driverMarkerGradient: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: Colors.surface.card,
+  },
+
+  // Destination Card
+  destinationCard: {
+    position: "absolute",
+    top: 50,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius["2xl"],
+    padding: Spacing.lg,
+    ...Shadows.xl,
+  },
+  destinationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  destinationBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background.lightSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  destinationInfo: {
+    flex: 1,
+  },
+  destinationLabel: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: 2,
+  },
+  destinationNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  destinationName: {
+    fontWeight: FontWeights.bold,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.primary,
+    flex: 1,
+  },
+  destinationProfileButton: {
+    borderRadius: BorderRadius.full,
+    overflow: "hidden",
+  },
+  driverStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background.lightSecondary,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: Spacing.sm,
+  },
+  statusDotActive: {
+    backgroundColor: Colors.accent.success,
+  },
+  statusDotSearching: {
+    backgroundColor: Colors.accent.warning,
+  },
+  statusDotEmpty: {
+    backgroundColor: Colors.text.tertiary,
+  },
+  statusText: {
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+  },
+
+  // Buttons
+  recenterButton: {
+    position: "absolute",
+    bottom: 100,
+    right: Spacing.xl,
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface.card,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Shadows.lg,
+  },
+  stopButton: {
         position: "absolute",
         bottom: 30,
-        right: 20,
-        backgroundColor: "white",
-        padding: 14,
-        borderRadius: 40,
-        elevation: 5,
-    },
-
-    driverCountBadge: {
-        position: "absolute",
-        top: 110,
-        right: 20,
-        left: 20,
+    left: Spacing.xl,
+    right: Spacing.xl,
+    borderRadius: BorderRadius.full,
+    overflow: "hidden",
+    ...Shadows.lg,
+  },
+  stopButtonGradient: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 14,
-        backgroundColor: "white",
-        shadowColor: "#000",
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 4,
-        zIndex: 105,
-        gap: 8,
-    },
-
-    destinationName: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#111827",
-    },
-
-    destinationAddress: {
-        fontSize: 12,
-        color: "#6b7280",
-        marginTop: 2,
-    },
-
-    driverCountRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginTop: 4,
-        gap: 6,
-    },
-
-    driverCountText: {
-        fontSize: 13,
-        fontWeight: "500",
-        color: "#111827",
-    },
-
-    clearButton: {
-        padding: 4,
-    },
-
-    // 👇 NEW: Stop Checking Button
-    stopCheckingButton: {
-        position: "absolute",
-        bottom: 30,
-        left: 20,
-        backgroundColor: "#ef4444", // Red color
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 25,
-        flexDirection: "row",
-        alignItems: "center",
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-        shadowOffset: { width: 0, height: 2 },
-    },
-
-    stopCheckingText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 15,
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  stopButtonText: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.inverse,
     },
 });
