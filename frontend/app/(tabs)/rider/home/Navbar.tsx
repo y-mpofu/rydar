@@ -1,12 +1,13 @@
-import { View, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 type NavbarProps = {
     onUserPress?: () => void;
-    onLogout?: () => void;
+    onSearch?: (text: string) => void;
+    value?: string;
 };
 
-export default function Navbar({ onUserPress, onLogout }: NavbarProps) {
+export default function Navbar({ onUserPress, onSearch, value }: NavbarProps) {
     return (
         <View
             style={{
@@ -18,17 +19,17 @@ export default function Navbar({ onUserPress, onLogout }: NavbarProps) {
                 backgroundColor: "transparent",
             }}
         >
-            {/* 🔵 Pill Navbar */}
+            {/* 🔵 Rounded Pill Navbar */}
             <View
                 style={{
                     width: "90%",
-                    paddingVertical: 12,
-                    paddingHorizontal: 20,
-                    backgroundColor: "rgba(255, 255, 255, 0.6)",
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+
                     borderRadius: 50,
                     flexDirection: "row",
-                    justifyContent: "space-between", // ⭐ user left, logout right
                     alignItems: "center",
+                    gap: 12,
 
                     shadowColor: "#000",
                     shadowOpacity: 0.12,
@@ -37,16 +38,54 @@ export default function Navbar({ onUserPress, onLogout }: NavbarProps) {
                     elevation: 6,
                 }}
             >
-                {/* 👤 User Icon (far left) */}
+                {/* 👤 User Icon (Left) */}
                 <TouchableOpacity onPress={onUserPress}>
-                    <Ionicons name="person-circle-outline" size={30} color="black" />
+                    <Ionicons name="person-circle-outline" size={32} color="black" />
                 </TouchableOpacity>
 
-                {/* 🚪 Logout Icon (far right) */}
-                <TouchableOpacity onPress={onLogout}>
-                    <Ionicons name="log-out-outline" size={28} color="black" />
-                </TouchableOpacity>
+                {/* 🔍 Search Bar (Expands to fill space) */}
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#666" style={{ marginRight: 6 }} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search"
+                        placeholderTextColor="#888"
+                        value={value}
+                        onChangeText={onSearch}
+                    />
+
+                </View>
             </View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    searchContainer: {
+        flexDirection: "row",
+        backgroundColor: "white",
+        paddingHorizontal: 10,
+        paddingVertical: 8,
+        borderRadius: 20,
+        alignItems: "center",
+        flex: 1,
+        borderWidth: 1,
+        borderColor: "#e5e7eb", // subtle light-gray border
+
+        shadowColor: "#000",
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 1,
+    },
+
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: "#000",
+        marginLeft: 6,
+        paddingVertical: 2,
+    },
+});
+
+

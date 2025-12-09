@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, TouchableOpacity, Pressable, Switch, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { getProfile, type UserProfile } from "../services/profile";
-import { logoutRider } from "../services/auth";
+import { getProfile, type UserProfile } from "../services/routes";
 
 type Props = {
     visible: boolean;
@@ -14,6 +13,7 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(false);
 
+    // Load profile when popup becomes visible
     useEffect(() => {
         if (!visible) return;
 
@@ -32,13 +32,9 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
         loadData();
     }, [visible]);
 
-    const handleLogout = async () => {
-        await logoutRider(); // clears token + redirects in your auth service
-        onClose();
-    };
-
     return (
         <Modal visible={visible} transparent animationType="fade">
+            {/* Background overlay */}
             <Pressable
                 onPress={onClose}
                 style={{
@@ -48,6 +44,7 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
                     alignItems: "center",
                 }}
             >
+                {/* Card - prevent closing when tapping inside */}
                 <Pressable
                     onPress={() => { }}
                     style={{
@@ -80,14 +77,14 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
                         </TouchableOpacity>
                     </View>
 
-                    {/* Loading */}
+                    {/* LOADING STATE */}
                     {loading && (
                         <View style={{ paddingVertical: 20, alignItems: "center" }}>
                             <ActivityIndicator size="large" color="#000" />
                         </View>
                     )}
 
-                    {/* Profile */}
+                    {/* USER INFO */}
                     {!loading && profile && (
                         <View
                             style={{
@@ -101,6 +98,7 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
                                 size={64}
                                 color="black"
                             />
+
                             <View style={{ marginLeft: 12 }}>
                                 <Text style={{ fontSize: 18, fontWeight: "500" }}>
                                     {profile.firstname} {profile.lastname}
@@ -112,22 +110,29 @@ export default function ViewAccountPopup({ visible, onClose }: Props) {
                         </View>
                     )}
 
-                    {/* Logout Button */}
-                    <TouchableOpacity
-                        onPress={handleLogout}
-                        style={{
-                            marginTop: 24,
-                            backgroundColor: "#EF4444",
-                            borderRadius: 10,
-                            paddingVertical: 12,
-                            alignItems: "center",
-                        }}
-                    >
-                        <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-                            Logout
-                        </Text>
-                    </TouchableOpacity>
+                    {/* Availability Toggle */}
+                    {!loading && (
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                paddingVertical: 12,
+                                paddingHorizontal: 4,
+                            }}
+                        >
+                            <Text style={{ fontSize: 16, fontWeight: "500" }}>
+                                Available
+                            </Text>
 
+                            <Switch
+                                value={available}
+                                onValueChange={setAvailable}
+                                trackColor={{ false: "#d1d5db", true: "#34d399" }}
+                                thumbColor="white"
+                            />
+                        </View>
+                    )}
                 </Pressable>
             </Pressable>
         </Modal>
