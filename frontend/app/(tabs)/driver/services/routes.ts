@@ -1,22 +1,85 @@
 import api from "./api";
+import * as SecureStore from 'expo-secure-store';
 
-export type Route = {
-    routeName: string
-}
-
-
-export type RoutePayload = {
+// Full route object with all fields
+export type DriverRoute = {
     routeName: string;
+    destinationLat: number;
+    destinationLong: number;
+    customComments?: string;
 };
 
-// routes.ts
-export async function getAllRoutes(): Promise<string[]> {
-    const res = await api.get<string[]>("/api/v1/drivers/me/routes");
-    console.log("routes response:", res.data);
-    return res.data;
+const ROUTES_METADATA_KEY = "driver_routes_metadata";
+
+// Helper: Store route metadata locally (comments + coordinates)
+async function saveRouteMetadata(route: DriverRoute) {
+    try {
+        const existing = await getRoutesMetadata();
+        existing[route.routeName] = {
+            destinationLat: route.destinationLat,
+            destinationLong: route.destinationLong,
+            customComments: route.customComments
+        };
+        await SecureStore.setItemAsync(ROUTES_METADATA_KEY, JSON.stringify(existing));
+    } catch (err) {
+        console.error("Failed to save route metadata:", err);
+    }
 }
 
+// Helper: Get all stored route metadata
+async function getRoutesMetadata(): Promise<Record<string, Partial<DriverRoute>>> {
+    try {
+        const data = await SecureStore.getItemAsync(ROUTES_METADATA_KEY);
+        return data ? JSON.parse(data) : {};
+    } catch (err) {
+        console.error("Failed to get route metadata:", err);
+        return {};
+    }
+}
 
+// Helper: Delete route metadata locally
+async function deleteRouteMetadata(routeName: string) {
+    try {
+        const existing = await getRoutesMetadata();
+        delete existing[routeName];
+        await SecureStore.setItemAsync(ROUTES_METADATA_KEY, JSON.stringify(existing));
+    } catch (err) {
+        console.error("Failed to delete route metadata:", err);
+    }
+}
+
+// Helper: Update route metadata locally
+async function updateRouteMetadata(oldName: string, newRoute: DriverRoute) {
+    try {
+        const existing = await getRoutesMetadata();
+        delete existing[oldName]; // Remove old key
+        existing[newRoute.routeName] = {
+            destinationLat: newRoute.destinationLat,
+            destinationLong: newRoute.destinationLong,
+            customComments: newRoute.customComments
+        };
+        await SecureStore.setItemAsync(ROUTES_METADATA_KEY, JSON.stringify(existing));
+    } catch (err) {
+        console.error("Failed to update route metadata:", err);
+    }
+}
+
+// Get all routes with full metadata
+export async function getAllRoutes(): Promise<DriverRoute[]> {
+    const res = await api.get<string[]>("/api/v1/drivers/me/routes");
+    const routeNames = res.data;
+    console.log("routes response:", routeNames);
+    
+    // Get metadata for each route
+    const metadata = await getRoutesMetadata();
+    
+    return routeNames.map(name => ({
+        routeName: name,
+        destinationLat: metadata[name]?.destinationLat || 0,
+        destinationLong: metadata[name]?.destinationLong || 0,
+        customComments: metadata[name]?.customComments
+    }));
+}
 
 export async function addNewRoute(
     routeName: string,
@@ -34,6 +97,9 @@ export async function addNewRoute(
         }
     );
 
+    // Save metadata locally
+    await saveRouteMetadata({ routeName, destinationLat, destinationLong, customComments });
+
     return res.data;
 }
 
@@ -45,6 +111,38 @@ export async function deleteRoute(routeName: string) {
         }
     );
 
+    // Delete metadata locally
+    await deleteRouteMetadata(routeName);
+
+    return res.data;
+}
+
+// Update route function
+export async function updateRoute(
+    oldRouteName: string,
+    newRouteName: string,
+    destinationLat: number,
+    destinationLong: number,
+    customComments: string
+) {
+    const res = await api.put(
+        `/api/v1/drivers/me/routes/${oldRouteName}`,
+        {
+            routeName: newRouteName,
+            destinationLat,
+            destinationLong,
+            customComments,
+        }
+    );
+
+    // Update metadata locally
+    await updateRouteMetadata(oldRouteName, { 
+        routeName: newRouteName, 
+        destinationLat, 
+        destinationLong, 
+        customComments 
+    });
+
     return res.data;
 }
 
@@ -54,8 +152,6 @@ export type UserProfile = {
     lastname: string;
     email: string;
 };
-
-
 
 export async function getProfile(): Promise<UserProfile> {
     const res = await api.get("/api/v1/user/me/profile");

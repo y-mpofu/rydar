@@ -6,7 +6,8 @@ import Navbar from "./Navbar";
 import AddRoutePopup from "./AddRoutePopup";
 import ViewRoutesPopup from "./ViewRoutesPopup";
 import ViewAccountPopup from "./ViewAccountPopup";
-import { addNewRoute, getAllRoutes, deleteRoute } from "../services/routes";
+import EditRoutePopup from "./EditRoutePopup"; // 👈 NEW IMPORT
+import { addNewRoute, getAllRoutes, deleteRoute, updateRoute, type DriverRoute } from "../services/routes"; // 👈 UPDATED IMPORTS
 import { logout } from "../services/auth";
 import { updateLocation } from "../services/me";
 
@@ -27,15 +28,17 @@ export default function HomeScreen() {
     } | null>(null);
 
     const [showAddRoute, setShowAddRoute] = useState(false);
-    const [routes, setRoutes] = useState<string[]>([]);
+    const [routes, setRoutes] = useState<DriverRoute[]>([]); // 👈 CHANGED: Now stores full DriverRoute objects
     const [showViewRoutes, setShowViewRoutes] = useState(false);
     const [showAccount, setShowAccount] = useState(false);
+    const [showEditRoute, setShowEditRoute] = useState(false); // 👈 NEW STATE
+    const [routeToEdit, setRouteToEdit] = useState<DriverRoute | null>(null); // 👈 NEW STATE
 
     useEffect(() => {
         const loadRoutes = async () => {
             try {
-                const names = await getAllRoutes(); // now string[]
-                setRoutes(names);
+                const fullRoutes = await getAllRoutes(); // 👈 CHANGED: Now returns DriverRoute[]
+                setRoutes(fullRoutes);
             } catch (err) {
                 console.error("Failed to load routes:", err);
             }
@@ -58,8 +61,8 @@ export default function HomeScreen() {
                 const payload = {
                     latitude: region.latitude,
                     longitude: region.longitude,
-                    currRouteName: randomRoute,
-                    customComments: "No Comment"
+                    currRouteName: randomRoute.routeName, // 👈 CHANGED: Access routeName property
+                    customComments: randomRoute.customComments || "No Comment" // 👈 CHANGED: Use actual comments
                 };
 
                 await updateLocation(payload);
@@ -83,7 +86,7 @@ export default function HomeScreen() {
         };
     }, [region, routes]);
 
-    // 🔥 NEW: save a single route with lat/long
+    // 🔥 Save a new route
     const handleSaveRoute = async (route: NewRoutePayload) => {
         try {
             await addNewRoute(
@@ -93,8 +96,13 @@ export default function HomeScreen() {
                 route.customComments ?? "No Comment"
             );
 
-            // Just keep the name locally (used for random route selection)
-            setRoutes((prev) => [...prev, route.routeName]);
+            // 👇 CHANGED: Add full route object to state
+            setRoutes((prev) => [...prev, {
+                routeName: route.routeName,
+                destinationLat: route.destinationLat,
+                destinationLong: route.destinationLong,
+                customComments: route.customComments
+            }]);
 
             setShowAddRoute(false);
         } catch (err) {
@@ -102,18 +110,51 @@ export default function HomeScreen() {
         }
     };
 
-    const handleDelete = async (index: number) => {
+    // 👇 CHANGED: Now receives routeName instead of index
+    const handleDelete = async (routeName: string) => {
         try {
-            const routeName = routes[index];
-            if (!routeName) return;
-
             await deleteRoute(routeName);
-            setRoutes((prev) => prev.filter((_, i) => i !== index));
+            setRoutes((prev) => prev.filter((r) => r.routeName !== routeName));
         } catch (err) {
             console.error("Failed to delete route:", err);
         }
     };
 
+    // 👇 NEW: Handle opening edit popup
+    const handleEditRoute = (route: DriverRoute) => {
+        setRouteToEdit(route);
+        setShowEditRoute(true);
+        setShowViewRoutes(false); // Close the view routes popup
+    };
+
+    // 👇 NEW: Handle saving edited route
+    const handleSaveEditedRoute = async (oldName: string, newName: string, comments: string) => {
+        try {
+            if (!routeToEdit) return;
+
+            await updateRoute(
+                oldName,
+                newName,
+                routeToEdit.destinationLat,
+                routeToEdit.destinationLong,
+                comments
+            );
+
+            // Update local state
+            setRoutes((prev) =>
+                prev.map((r) =>
+                    r.routeName === oldName
+                        ? { ...r, routeName: newName, customComments: comments }
+                        : r
+                )
+            );
+
+            setShowEditRoute(false);
+            setRouteToEdit(null);
+        } catch (err) {
+            console.error("Failed to update route:", err);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -157,18 +198,30 @@ export default function HomeScreen() {
                 onClose={() => setShowAccount(false)}
             />
 
+            {/* 👇 UPDATED: Added onEdit prop */}
             <ViewRoutesPopup
                 visible={showViewRoutes}
                 routes={routes}
                 onClose={() => setShowViewRoutes(false)}
                 onDelete={handleDelete}
+                onEdit={handleEditRoute} // 👈 NEW PROP
             />
 
-            {/* 👇 updated onSave */}
             <AddRoutePopup
                 visible={showAddRoute}
                 onClose={() => setShowAddRoute(false)}
                 onSave={handleSaveRoute}
+            />
+
+            {/* 👇 NEW: Edit Route Popup */}
+            <EditRoutePopup
+                visible={showEditRoute}
+                route={routeToEdit}
+                onClose={() => {
+                    setShowEditRoute(false);
+                    setRouteToEdit(null);
+                }}
+                onSave={handleSaveEditedRoute}
             />
 
             {region && (

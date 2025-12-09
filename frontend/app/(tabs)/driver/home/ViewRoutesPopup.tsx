@@ -7,15 +7,17 @@ import {
     ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { DriverRoute } from "../services/routes";
 
 type Props = {
     visible: boolean;
-    routes: string[];
+    routes: DriverRoute[]; // 👈 CHANGED: Now accepts full DriverRoute objects
     onClose: () => void;
-    onDelete?: (index: number) => void;
+    onDelete?: (routeName: string) => void; // 👈 CHANGED: Now passes routeName instead of index
+    onEdit?: (route: DriverRoute) => void; // 👈 NEW: Callback when route is clicked for editing
 };
 
-export default function ViewRoutesPopup({ visible, routes, onClose, onDelete }: Props) {
+export default function ViewRoutesPopup({ visible, routes, onClose, onDelete, onEdit }: Props) {
     return (
         <Modal visible={visible} transparent animationType="fade">
             {/* Overlay — clicking closes */}
@@ -36,21 +38,35 @@ export default function ViewRoutesPopup({ visible, routes, onClose, onDelete }: 
                     ) : (
                         <ScrollView style={{ maxHeight: 320 }}>
                             {routes.map((route, i) => (
-                                <View key={i} style={styles.routeRow}>
-                                    <Text style={styles.routeText}>
-                                        {i + 1}. {route}
-                                    </Text>
+                                <Pressable
+                                    key={i}
+                                    style={styles.routeRow}
+                                    onPress={() => onEdit && onEdit(route)} // 👈 NEW: Make route clickable
+                                >
+                                    <View style={styles.routeInfo}>
+                                        {/* Route Name */}
+                                        <Text style={styles.routeText}>
+                                            {i + 1}. {route.routeName}
+                                        </Text>
+                                        
+                                        {/* Comments - Show if exists */}
+                                        {route.customComments && (
+                                            <Text style={styles.commentsText}>
+                                                "{route.customComments}"
+                                            </Text>
+                                        )}
+                                    </View>
 
+                                    {/* Delete Button */}
                                     {onDelete && (
                                         <Pressable
-                                            onPress={() => onDelete(i)}
+                                            onPress={() => onDelete(route.routeName)} // 👈 CHANGED: Pass routeName
                                             style={styles.deleteButton}
                                         >
                                             <Text style={styles.deleteText}>Delete</Text>
                                         </Pressable>
                                     )}
-
-                                </View>
+                                </Pressable>
                             ))}
                         </ScrollView>
                     )}
@@ -98,12 +114,24 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: 10,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
+    },
+    routeInfo: {
+        flex: 1,
+        marginRight: 10,
     },
     routeText: {
         fontSize: 16,
         color: "#111",
-        flexShrink: 1,
+        fontWeight: "500",
+    },
+    commentsText: {
+        fontSize: 14,
+        color: "#666",
+        fontStyle: "italic",
+        marginTop: 4,
     },
     deleteButton: {
         paddingVertical: 4,
