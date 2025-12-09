@@ -49,6 +49,7 @@ export default function ViewRoutesPopup({ visible, routes, onClose, onDelete }: 
                                             <Text style={styles.deleteText}>Delete</Text>
                                         </Pressable>
                                     )}
+
                                 </View>
                             ))}
                         </ScrollView>

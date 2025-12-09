@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Modal,
     View,
@@ -6,40 +6,72 @@ import {
     TextInput,
     Pressable,
     StyleSheet,
-    ScrollView,
+    FlatList,
+    Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { searchPlaces, type PlaceResult } from "../../../../scripts/mapboxSearch";
+
+export type NewRoutePayload = {
+    routeName: string;
+    destinationLat: number;
+    destinationLong: number;
+    customComments?: string;
+};
 
 type Props = {
     visible: boolean;
     onClose: () => void;
-    onSave: (routes: string[]) => void;
+    onSave: (route: NewRoutePayload) => void;
 };
 
 export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
-    const [routeCount, setRouteCount] = useState<number | null>(null);
-    const [routes, setRoutes] = useState<string[]>([]);
-
-    const handleConfirmCount = () => {
-        if (!routeCount || routeCount <= 0) return;
-        setRoutes(Array(routeCount).fill(""));
-    };
-
-    const updateRouteValue = (index: number, value: string) => {
-        const updated = [...routes];
-        updated[index] = value;
-        setRoutes(updated);
-    };
-
-    const handleSave = () => {
-        onSave(routes);
-        reset();
-    };
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
 
     const reset = () => {
-        setRouteCount(null);
-        setRoutes([]);
+        setSearchQuery("");
+        setSearchResults([]);
+        setIsSearching(false);
         onClose();
+    };
+
+    // 🔍 AUTOCOMPLETE SEARCH (same pattern as navbar/home)
+    useEffect(() => {
+        const timeout = setTimeout(async () => {
+            if (!searchQuery || searchQuery.length < 2) {
+                setSearchResults([]);
+                return;
+            }
+
+            try {
+                setIsSearching(true);
+                const places = await searchPlaces(searchQuery);
+                setSearchResults(places);
+            } catch (err) {
+                console.log("searchPlaces error in AddRoutePopup:", err);
+                setSearchResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timeout);
+    }, [searchQuery]);
+
+    // single tap -> use place, call onSave, close
+    const handleSelectPlace = (place: PlaceResult) => {
+        Keyboard.dismiss();
+
+        onSave({
+            routeName: place.name,
+            destinationLat: place.latitude,
+            destinationLong: place.longitude,
+            customComments: "No Comment", // can add a comments field later
+        });
+
+        reset();
     };
 
     return (
@@ -48,52 +80,53 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
             <Pressable style={styles.overlay} onPress={reset}>
                 {/* Inner card — clicking inside does NOT close */}
                 <Pressable style={styles.card} onPress={() => { }}>
-
                     {/* X Button */}
                     <Pressable style={styles.closeIcon} onPress={reset}>
                         <Ionicons name="close" size={28} color="black" />
                     </Pressable>
 
-                    <Text style={styles.title}>Add Routes</Text>
+                    <Text style={styles.title}>Add Route</Text>
 
-                    {/* Step 1: choose number */}
-                    {!routes.length ? (
-                        <>
-                            <Text style={styles.label}>How many routes?</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter a number"
-                                keyboardType="numeric"
-                                onChangeText={(t) => setRouteCount(Number(t))}
+                    <Text style={styles.label}>Destination</Text>
+                    <View style={styles.searchRow}>
+                        <Ionicons
+                            name="search"
+                            size={18}
+                            color="#6b7280"
+                            style={{ marginRight: 6 }}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Search destination"
+                            value={searchQuery}
+                            onChangeText={(text) => {
+                                setSearchQuery(text);
+                            }}
+                        />
+                    </View>
+
+                    {/* 🔽 AUTOCOMPLETE DROPDOWN */}
+                    {searchResults.length > 0 && (
+                        <View style={styles.dropdown}>
+                            <FlatList
+                                data={searchResults}
+                                keyboardShouldPersistTaps="handled"
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <Pressable
+                                        onPress={() => handleSelectPlace(item)}
+                                        style={styles.dropdownItem}
+                                    >
+                                        <Text style={styles.dropdownTitle}>{item.name}</Text>
+                                        <Text style={styles.dropdownSubtitle}>{item.address}</Text>
+                                    </Pressable>
+                                )}
                             />
+                        </View>
+                    )}
 
-                            <Pressable style={styles.button} onPress={handleConfirmCount}>
-                                <Text style={styles.buttonText}>Next</Text>
-                            </Pressable>
-                        </>
-                    ) : (
-                        <>
-                            <ScrollView style={{ maxHeight: 300 }}>
-                                {routes.map((r, i) => (
-                                    <View key={i} style={{ marginBottom: 12 }}>
-                                        <Text style={styles.label}>Route {i + 1}</Text>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Enter destination"
-                                            value={routes[i]}
-                                            onChangeText={(v) => updateRouteValue(i, v)}
-                                        />
-                                    </View>
-                                ))}
-                            </ScrollView>
-
-                            <Pressable
-                                style={[styles.button, { backgroundColor: "#0f172a" }]}
-                                onPress={handleSave}
-                            >
-                                <Text style={styles.buttonText}>Save Routes</Text>
-                            </Pressable>
-                        </>
+                    {isSearching && (
+                        <Text style={styles.searchHint}>Searching…</Text>
                     )}
                 </Pressable>
             </Pressable>
@@ -134,21 +167,49 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         fontWeight: "500",
     },
-    input: {
+    searchRow: {
+        flexDirection: "row",
+        alignItems: "center",
         borderWidth: 1,
         borderColor: "#ccc",
-        padding: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 8,
         borderRadius: 10,
     },
-    button: {
-        backgroundColor: "#2563eb",
-        paddingVertical: 12,
-        borderRadius: 10,
-        marginTop: 12,
+    input: {
+        flex: 1,
+        fontSize: 16,
     },
-    buttonText: {
-        color: "white",
+
+    dropdown: {
+        marginTop: 10,
+        maxHeight: 220,
+        borderRadius: 10,
+        backgroundColor: "white",
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+        overflow: "hidden",
+    },
+    dropdownItem: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderBottomWidth: 1,
+        borderColor: "#f3f4f6",
+    },
+    dropdownTitle: {
+        fontSize: 14,
+        fontWeight: "500",
+        color: "#111827",
+    },
+    dropdownSubtitle: {
+        fontSize: 12,
+        color: "#6b7280",
+        marginTop: 2,
+    },
+    searchHint: {
+        marginTop: 8,
+        fontSize: 12,
+        color: "#6b7280",
         textAlign: "center",
-        fontWeight: "600",
     },
 });

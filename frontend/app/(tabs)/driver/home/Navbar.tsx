@@ -5,9 +5,10 @@ type NavbarProps = {
     onAddRoute: () => void;
     onViewRoutes?: () => void;
     onLogout?: () => void;
+    onUserPress?: () => void;
 };
 
-export default function Navbar({ onAddRoute, onViewRoutes, onLogout }: NavbarProps) {
+export default function Navbar({ onAddRoute, onViewRoutes, onLogout, onUserPress }: NavbarProps) {
     return (
         <View
             style={{
@@ -19,7 +20,6 @@ export default function Navbar({ onAddRoute, onViewRoutes, onLogout }: NavbarPro
                 backgroundColor: "transparent",
             }}
         >
-            {/* 🔵 Pill Navbar */}
             <View
                 style={{
                     width: "90%",
@@ -28,7 +28,7 @@ export default function Navbar({ onAddRoute, onViewRoutes, onLogout }: NavbarPro
                     backgroundColor: "rgba(255, 255, 255, 0.8)",
                     borderRadius: 50,
                     flexDirection: "row",
-                    justifyContent: "flex-end",
+                    justifyContent: "space-between",
                     alignItems: "center",
 
                     shadowColor: "#000",
@@ -36,20 +36,26 @@ export default function Navbar({ onAddRoute, onViewRoutes, onLogout }: NavbarPro
                     shadowRadius: 8,
                     shadowOffset: { width: 0, height: 3 },
                     elevation: 6,
-                    gap: 18,
                 }}
             >
-                <TouchableOpacity onPress={onViewRoutes}>
-                    <Ionicons name="map-outline" size={28} color="black" />
+                <TouchableOpacity onPress={onUserPress}>
+                    <Ionicons name="person-circle-outline" size={32} color="black" />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={onAddRoute}>
-                    <Ionicons name="add-circle-outline" size={30} color="black" />
-                </TouchableOpacity>
+                {/* Right side icons */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
+                    <TouchableOpacity onPress={onViewRoutes}>
+                        <Ionicons name="map-outline" size={28} color="black" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity onPress={onLogout}>
-                    <Ionicons name="log-out-outline" size={28} color="black" />
-                </TouchableOpacity>
+                    <TouchableOpacity onPress={onAddRoute}>
+                        <Ionicons name="add-circle-outline" size={30} color="black" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={onLogout}>
+                        <Ionicons name="log-out-outline" size={28} color="black" />
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
