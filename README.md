@@ -2,14 +2,14 @@
 
 ## Overview
 
-Rydar is redefining how people move through Africa’s informal transport networks. In cities accross Nigeria, millions rely on shared taxis, minibuses, and tricycles—affordable yet offline systems that force riders to guess routes, stops, and timing.
+Rydar is redefining how people move through Africa's informal transport networks. In cities across Nigeria, millions rely on shared taxis, minibuses, and tricycles—affordable yet offline systems that force riders to guess routes, stops, and timing.
 
 Rydar makes this invisible network visible. Enter a start and destination to see real, multi-leg routes with walk segments, informal rides, and transfers. The app highlights pickup spots, shows active driver corridors, and alerts you when to alight. Drivers can share availability effortlessly, staying true to how they already work.
 
 By digitizing everyday mobility, Rydar turns chaos into clarity—making informal transport reliable, connected, and ready to scale across Africa.
 
 **What this app actually is:**  
-Rydar is an **early-stage working application** that brings informal transport routing, driver visibility, and stop detection into a functional mobile experience. The backend—covering routing logic, user accounts, driver workflows, and live corridor updates—is now **hosted online**, which means users only need to run the mobile app locally. At this stage, Rydar is a **feature-complete foundation** for the transport ecosystem we’re building: the APIs are live, the routing engine responds to real inputs, and the mobile frontend communicates directly with production-like services. Future milestones will refine accuracy, expand pilot coverage, and prepare the system for deployment in the field.
+Rydar is an **early-stage working application** that brings informal transport routing, driver visibility, and stop detection into a functional mobile experience. The backend—covering routing logic, user accounts, driver workflows, and live corridor updates—is now **hosted online**, which means users only need to run the mobile app locally. At this stage, Rydar is a **feature-complete foundation** for the transport ecosystem we're building: the APIs are live, the routing engine responds to real inputs, and the mobile frontend communicates directly with production-like services. Future milestones will refine accuracy, expand pilot coverage, and prepare the system for deployment in the field.
 
 **Project partners:** y-mpofu · siisodaa · uosondu
 
@@ -33,13 +33,49 @@ Rydar is an **early-stage working application** that brings informal transport r
 Rydar consists of two components:
 
 - **Backend** – Hosted online (no local setup required)
-- **Mobile App** – React Native (Expo)
+- **Mobile App** – React Native (Expo) for iOS and Android
 
 Follow the steps below to install and run the mobile app locally.  
 The backend is already deployed and the app will automatically connect to it.
 
 ### 1) Clone the Repository
-
 ```bash
 git clone https://github.com/your-username/rydar.git
 cd rydar
+```
+
+### 2) Backend (Hosted — No Local Installation Needed)
+
+The backend API is now fully hosted online, so you do not need to:
+- Install or configure Java / Gradle
+- Set up or run PostgreSQL locally
+- Start a Spring Boot server on your machine
+
+The mobile app is configured to communicate with the deployed backend instance via a predefined API base URL. For most users, this means you only need to get the frontend running and the app will talk to the live backend automatically.
+
+If you later want to contribute to backend development (e.g., changing routes, models, or business logic), you can still clone and run the backend locally, but that is optional and no longer part of the standard installation path.
+
+### 3) Run the Mobile App (Expo)
+
+**Prerequisites**
+
+- Node.js 18+
+- npm (or yarn)
+- **IMPORTANT:** Open the frontend folder as a standalone project in any IDE (VS Code)
+- Expo CLI (global install, one time):
+```bash
+npm install -g expo-cli
+```
+
+**Commands**
+```bash
+cd ../frontend
+npm install
+npm start
+```
+
+This opens the Expo developer tools. Then:
+
+- Press `a` to open Android emulator
+- Press `i` to open iOS simulator (Mac only)
+- Or scan the QR code with the Expo Go app on your phone (iOS or Android)
