@@ -47,13 +47,8 @@ cd rydar
 ### 2) Backend (Hosted — No Local Installation Needed)
 
 The backend API is now fully hosted online, so you do not need to:
-- Install or configure Java / Gradle
-- Set up or run PostgreSQL locally
-- Start a Spring Boot server on your machine
 
 The mobile app is configured to communicate with the deployed backend instance via a predefined API base URL. For most users, this means you only need to get the frontend running and the app will talk to the live backend automatically.
-
-If you later want to contribute to backend development (e.g., changing routes, models, or business logic), you can still clone and run the backend locally, but that is optional and no longer part of the standard installation path.
 
 ### 3) Run the Mobile App (Expo)
 
