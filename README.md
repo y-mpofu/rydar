@@ -46,8 +46,6 @@ cd rydar
 
 ### 2) Backend (Hosted — No Local Installation Needed)
 
-The backend API is now fully hosted online, so you do not need to:
-
 The mobile app is configured to communicate with the deployed backend instance via a predefined API base URL. For most users, this means you only need to get the frontend running and the app will talk to the live backend automatically.
 
 ### 3) Run the Mobile App (Expo)
