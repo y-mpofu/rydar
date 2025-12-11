@@ -62,7 +62,7 @@ npm install -g expo-cli
 
 **Commands**
 ```bash
-cd ../frontend
+cd frontend
 ```
 
 - Create your env file
