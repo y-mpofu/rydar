@@ -1,5 +1,6 @@
 // Dynamically provide secrets from environment variables so they are not committed.
 // Expo will prefer this file over app.json when present.
+require("dotenv").config();
 const appJson = require("./app.json");
 
 module.exports = ({ config }) => {

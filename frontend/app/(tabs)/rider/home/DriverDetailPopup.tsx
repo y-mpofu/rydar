@@ -187,26 +187,23 @@ export default function DriverDetailPopup({ visible, driver, onClose }: Props) {
             {/* Get Directions Button */}
             <TouchableOpacity
               onPress={handleGetDirections}
-              activeOpacity={0.9}
+              activeOpacity={0.85}
               style={styles.directionsButtonWrapper}
             >
-              <LinearGradient
-                colors={[Colors.accent.success, "#059669"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.directionsButton}
-              >
+              <View style={styles.directionsButton}>
                 <View style={styles.directionsIconContainer}>
-                  <Ionicons name="navigate" size={22} color={Colors.text.inverse} />
+                  <Ionicons name="navigate" size={20} color={Colors.primary.main} />
                 </View>
                 <View style={styles.directionsTextContainer}>
                   <Text style={styles.directionsButtonText}>Get Directions</Text>
                   <Text style={styles.directionsSubtext}>
-                    Choose your preferred maps app
+                    Open in maps app
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
-              </LinearGradient>
+                <View style={styles.directionsArrow}>
+                  <Ionicons name="arrow-forward" size={18} color={Colors.primary.main} />
+                </View>
+              </View>
             </TouchableOpacity>
 
             {/* Close Button */}
@@ -339,21 +336,24 @@ const styles = StyleSheet.create({
   directionsButtonWrapper: {
     marginTop: Spacing.sm,
     marginBottom: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl,
     overflow: "hidden",
-    ...Shadows.lg,
   },
   directionsButton: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.lg,
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.xl,
   },
   directionsIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: `${Colors.primary.main}15`,
     justifyContent: "center",
     alignItems: "center",
     marginRight: Spacing.md,
@@ -363,14 +363,22 @@ const styles = StyleSheet.create({
   },
   directionsButtonText: {
     fontWeight: FontWeights.semiBold,
-    fontSize: Typography.fontSize.lg,
-    color: Colors.text.inverse,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
   },
   directionsSubtext: {
     fontWeight: FontWeights.regular,
-    fontSize: Typography.fontSize.sm,
-    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.tertiary,
     marginTop: 2,
+  },
+  directionsArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.full,
+    backgroundColor: `${Colors.primary.main}10`,
+    justifyContent: "center",
+    alignItems: "center",
   },
   
   doneButton: {
