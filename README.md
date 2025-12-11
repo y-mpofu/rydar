@@ -63,16 +63,19 @@ npm install -g expo-cli
 **Commands**
 ```bash
 cd ../frontend
+```
 
+- Create your env file
+```bash
 cat > .env << 'EOF'
 EXPO_PUBLIC_MAPBOX_KEY=pk.eyJ1Ijoic2lpc28iLCJhIjoiY21pdzl1bmZrMXp2OTNmcTBpbTYyd2hqcyJ9.klbmlBth7KWKtiyFNfccjA
 EXPO_PUBLIC_GOOGLE_PLACES_KEY=AIzaSyDBJuTp9tc_5DpprI7zxAJaGga16pALuWo
 EOF
-
-npm install
-npm start
 ```
 
+- Install requirements and start frontend
+- **NB:** The backend sleeps when there is no activity, since we are on render's free plan. Please be patient when you first try to login. It usually takes about 3 - 6 minutes.
+  
 ```bash
 npm install
 npm start
@@ -83,3 +86,5 @@ This opens the Expo developer tools. Then:
 - Press `a` to open Android emulator
 - Press `i` to open iOS simulator (Mac only)
 - Or scan the QR code with the Expo Go app on your phone (iOS or Android)
+
+
