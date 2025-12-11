@@ -73,6 +73,11 @@ npm install
 npm start
 ```
 
+```bash
+npm install
+npm start
+```
+
 This opens the Expo developer tools. Then:
 
 - Press `a` to open Android emulator
