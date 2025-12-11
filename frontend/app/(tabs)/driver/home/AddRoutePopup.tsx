@@ -1,13 +1,26 @@
+import {
+  BorderRadius,
+  Colors,
+  FontWeights,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
+  KeyboardAvoidingView,
   Modal,
-  Pressable,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import {
@@ -32,7 +45,6 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  // 👇 NEW: Store selected place and custom comments
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
   const [customComments, setCustomComments] = useState("");
 
@@ -42,10 +54,10 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
     setIsSearching(false);
     setSelectedPlace(null);
     setCustomComments("");
+    Keyboard.dismiss();
     onClose();
   };
 
-  // 🔍 AUTOCOMPLETE SEARCH (same pattern as navbar/home)
   useEffect(() => {
     const timeout = setTimeout(async () => {
       if (!searchQuery || searchQuery.length < 2) {
@@ -68,15 +80,13 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  // 👇 MODIFIED: Now just stores the selected place, doesn't save yet
   const handleSelectPlace = (place: PlaceResult) => {
     Keyboard.dismiss();
     setSelectedPlace(place);
-    setSearchResults([]); // Clear dropdown
-    setSearchQuery(place.name); // Show selected place name in search field
+    setSearchResults([]);
+    setSearchQuery(place.name);
   };
 
-  // 👇 NEW: Handle the actual save when button is pressed
   const handleSaveRoute = () => {
     if (!selectedPlace) return;
 
@@ -84,7 +94,7 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
       routeName: selectedPlace.name,
       destinationLat: selectedPlace.latitude,
       destinationLong: selectedPlace.longitude,
-      customComments: customComments || undefined, // Send undefined if empty
+      customComments: customComments || undefined,
     });
 
     reset();
@@ -92,184 +102,364 @@ export default function AddRoutePopup({ visible, onClose, onSave }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      {/* Background overlay — clicking closes */}
-      <Pressable style={styles.overlay} onPress={reset}>
-        {/* Inner card — clicking inside does NOT close */}
-        <Pressable style={styles.card} onPress={() => {}}>
-          {/* X Button */}
-          <Pressable style={styles.closeIcon} onPress={reset}>
-            <Ionicons name="close" size={28} color="black" />
-          </Pressable>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <TouchableWithoutFeedback onPress={reset}>
+          <View style={styles.overlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.card}>
+                {/* Header */}
+                <View style={styles.header}>
+                  <View style={styles.headerIcon}>
+                    <Ionicons name="add-circle" size={24} color={Colors.primary.main} />
+                  </View>
+                  <Text style={styles.title}>Add Route</Text>
+                  <TouchableOpacity style={styles.closeButton} onPress={reset}>
+                    <Ionicons name="close" size={24} color={Colors.text.secondary} />
+                  </TouchableOpacity>
+                </View>
 
-          <Text style={styles.title}>Add Route</Text>
+                {/* Divider */}
+                <View style={styles.divider} />
 
-          {/* Destination Search */}
-          <Text style={styles.label}>Destination</Text>
-          <View style={styles.searchRow}>
-            <Ionicons
-              name="search"
-              size={18}
-              color="#6b7280"
-              style={{ marginRight: 6 }}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="ENTER THE DESTINATION HERE"
-              value={searchQuery}
-              onChangeText={(text) => {
-                setSearchQuery(text);
-              }}
-            />
+                {/* Content */}
+                <ScrollView 
+                  style={styles.content}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {/* Destination Search */}
+                  <View style={styles.inputWrapper}>
+                    <Text style={styles.label}>Destination</Text>
+                    <View style={styles.searchContainer}>
+                      <Ionicons
+                        name="search"
+                        size={20}
+                        color={Colors.text.tertiary}
+                        style={styles.searchIcon}
+                      />
+                      <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search for a destination"
+                        placeholderTextColor={Colors.text.tertiary}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        autoCorrect={false}
+                        autoCapitalize="none"
+                      />
+                      {searchQuery.length > 0 && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSearchQuery("");
+                            setSelectedPlace(null);
+                          }}
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={20}
+                            color={Colors.text.tertiary}
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* Search Results Dropdown */}
+                  {searchResults.length > 0 && (
+                    <View style={styles.dropdown}>
+                      <FlatList
+                        data={searchResults}
+                        keyboardShouldPersistTaps="handled"
+                        keyExtractor={(item) => item.id}
+                        scrollEnabled={false}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => handleSelectPlace(item)}
+                            style={styles.dropdownItem}
+                          >
+                            <View style={styles.dropdownIcon}>
+                              <Ionicons
+                                name="location"
+                                size={16}
+                                color={Colors.primary.main}
+                              />
+                            </View>
+                            <View style={styles.dropdownTextContainer}>
+                              <Text style={styles.dropdownTitle}>{item.name}</Text>
+                              <Text style={styles.dropdownSubtitle}>{item.address}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  )}
+
+                  {isSearching && (
+                    <View style={styles.searchingIndicator}>
+                      <Text style={styles.searchingText}>Searching...</Text>
+                    </View>
+                  )}
+
+                  {/* Selected Place Card */}
+                  {selectedPlace && (
+                    <View style={styles.selectedCard}>
+                      <View style={styles.selectedIcon}>
+                        <Ionicons name="flag" size={20} color={Colors.accent.success} />
+                      </View>
+                      <View style={styles.selectedInfo}>
+                        <Text style={styles.selectedName}>{selectedPlace.name}</Text>
+                        <Text style={styles.selectedAddress}>{selectedPlace.address}</Text>
+                      </View>
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color={Colors.accent.success}
+                      />
+                    </View>
+                  )}
+
+                  {/* Comments Field - Only show when destination is selected */}
+                  {selectedPlace && (
+                    <View style={styles.inputWrapper}>
+                      <Text style={styles.label}>Comments (Optional)</Text>
+                      <View style={styles.commentsContainer}>
+                        <TextInput
+                          style={styles.commentsInput}
+                          placeholder="Add notes for riders..."
+                          placeholderTextColor={Colors.text.tertiary}
+                          value={customComments}
+                          onChangeText={setCustomComments}
+                          multiline
+                          numberOfLines={3}
+                          textAlignVertical="top"
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Save Button */}
+                  {selectedPlace && (
+                    <TouchableOpacity onPress={handleSaveRoute} activeOpacity={0.8}>
+                      <LinearGradient
+                        colors={[Colors.primary.main, Colors.primary.dark]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.saveButton}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={20}
+                          color={Colors.text.inverse}
+                        />
+                        <Text style={styles.saveButtonText}>Save Route</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={{ height: 20 }} />
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-
-          {/* 🔽 AUTOCOMPLETE DROPDOWN */}
-          {searchResults.length > 0 && (
-            <View style={styles.dropdown}>
-              <FlatList
-                data={searchResults}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <Pressable
-                    onPress={() => handleSelectPlace(item)}
-                    style={styles.dropdownItem}
-                  >
-                    <Text style={styles.dropdownTitle}>{item.name}</Text>
-                    <Text style={styles.dropdownSubtitle}>{item.address}</Text>
-                  </Pressable>
-                )}
-              />
-            </View>
-          )}
-
-          {isSearching && <Text style={styles.searchHint}>Searching…</Text>}
-
-          {/* 👇 NEW: Custom Comments Field - Only show when destination is selected */}
-          {selectedPlace && (
-            <>
-              <Text style={[styles.label, { marginTop: 20 }]}>
-                Comments (Optional)
-              </Text>
-              <TextInput
-                style={styles.commentsInput}
-                placeholder="Add comments"
-                placeholderTextColor="#000"
-                value={customComments}
-                onChangeText={setCustomComments}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
-              />
-
-              {/* 👇 NEW: Save Route Button */}
-              <Pressable style={styles.saveButton} onPress={handleSaveRoute}>
-                <Text style={styles.saveButtonText}>Save Route</Text>
-              </Pressable>
-            </>
-          )}
-        </Pressable>
-      </Pressable>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: Colors.surface.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   card: {
-    width: "85%",
-    padding: 20,
-    paddingTop: 36,
-    borderRadius: 16,
-    backgroundColor: "white",
-    position: "relative",
+    width: "90%",
+    maxHeight: "85%",
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius["2xl"],
+    overflow: "hidden",
+    ...Shadows.xl,
   },
-  closeIcon: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    padding: 4,
-    zIndex: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 15,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 6,
-    fontWeight: "500",
-  },
-  searchRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
-  input: {
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: `${Colors.primary.main}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  title: {
     flex: 1,
-    fontSize: 16,
+    fontWeight: FontWeights.bold,
+    fontSize: Typography.fontSize["2xl"],
+    color: Colors.text.primary,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background.lightSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginHorizontal: Spacing.xl,
+  },
+  content: {
+    padding: Spacing.xl,
+  },
+  inputWrapper: {
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.sm,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+  },
+  searchIcon: {
+    marginRight: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    paddingVertical: Spacing.md,
   },
   dropdown: {
-    marginTop: 10,
-    maxHeight: 220,
-    borderRadius: 10,
-    backgroundColor: "white",
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    maxHeight: 200,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    overflow: "hidden",
+    borderColor: Colors.border.light,
+    ...Shadows.md,
   },
   dropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
-    borderColor: "#f3f4f6",
+    borderColor: Colors.border.light,
+  },
+  dropdownIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: `${Colors.primary.main}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  dropdownTextContainer: {
+    flex: 1,
   },
   dropdownTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#111827",
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.primary,
   },
   dropdownSubtitle: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.secondary,
     marginTop: 2,
   },
-  searchHint: {
-    marginTop: 8,
-    fontSize: 12,
-    color: "#6b7280",
-    textAlign: "center",
+  searchingIndicator: {
+    alignItems: "center",
+    paddingVertical: Spacing.md,
   },
-  // 👇 NEW STYLES for comments field and save button
-  commentsInput: {
+  searchingText: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.tertiary,
+  },
+  selectedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: `${Colors.accent.success}15`,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    fontSize: 16,
+    borderColor: `${Colors.accent.success}30`,
+  },
+  selectedIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    backgroundColor: `${Colors.accent.success}20`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  selectedInfo: {
+    flex: 1,
+  },
+  selectedName: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+  },
+  selectedAddress: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginTop: 2,
+  },
+  commentsContainer: {
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  commentsInput: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
     minHeight: 80,
   },
   saveButton: {
-    marginTop: 20,
-    backgroundColor: "#3B82F6",
-    paddingVertical: 14,
-    borderRadius: 10,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+    ...Shadows.glow,
   },
   saveButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
   },
 });

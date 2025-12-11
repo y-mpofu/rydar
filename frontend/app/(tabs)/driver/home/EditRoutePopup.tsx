@@ -1,153 +1,331 @@
-import { useState, useEffect } from "react";
 import {
-    Modal,
-    View,
-    Text,
-    TextInput,
-    Pressable,
-    StyleSheet,
-} from "react-native";
+  BorderRadius,
+  Colors,
+  FontWeights,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import type { DriverRoute } from "../services/routes";
 
 type Props = {
-    visible: boolean;
-    route: DriverRoute | null;
-    onClose: () => void;
-    onSave: (oldName: string, newName: string, comments: string) => void;
+  visible: boolean;
+  route: DriverRoute | null;
+  onClose: () => void;
+  onSave: (oldName: string, newName: string, comments: string) => void;
+  onDelete?: (routeName: string) => void;
 };
 
-export default function EditRoutePopup({ visible, route, onClose, onSave }: Props) {
-    const [routeName, setRouteName] = useState("");
-    const [customComments, setCustomComments] = useState("");
+export default function EditRoutePopup({
+  visible,
+  route,
+  onClose,
+  onSave,
+  onDelete,
+}: Props) {
+  const [routeName, setRouteName] = useState("");
+  const [customComments, setCustomComments] = useState("");
 
-    // When the popup opens with a route, populate the fields
-    useEffect(() => {
-        if (route) {
-            setRouteName(route.routeName);
-            setCustomComments(route.customComments || "");
-        }
-    }, [route]);
+  useEffect(() => {
+    if (route) {
+      setRouteName(route.routeName);
+      setCustomComments(route.customComments || "");
+    }
+  }, [route]);
 
-    const reset = () => {
-        setRouteName("");
-        setCustomComments("");
-        onClose();
-    };
+  const reset = () => {
+    setRouteName("");
+    setCustomComments("");
+    Keyboard.dismiss();
+    onClose();
+  };
 
-    const handleSave = () => {
-        if (!route) return;
-        
-        // Call onSave with old name, new name, and comments
-        onSave(route.routeName, routeName, customComments);
-        reset();
-    };
+  const handleSave = () => {
+    if (!route) return;
+    onSave(route.routeName, routeName, customComments);
+    reset();
+  };
 
-    if (!route) return null;
+  const handleDelete = () => {
+    if (!route || !onDelete) return;
+    
+    Alert.alert(
+      "Delete Route",
+      `Are you sure you want to delete "${route.routeName}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            onDelete(route.routeName);
+            reset();
+          },
+        },
+      ]
+    );
+  };
 
-    return (
-        <Modal visible={visible} transparent animationType="fade">
-            <Pressable style={styles.overlay} onPress={reset}>
-                <Pressable style={styles.card} onPress={() => { }}>
-                    {/* X Button */}
-                    <Pressable style={styles.closeIcon} onPress={reset}>
-                        <Ionicons name="close" size={28} color="black" />
-                    </Pressable>
+  if (!route) return null;
 
-                    <Text style={styles.title}>Edit Route</Text>
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
+      >
+        <TouchableWithoutFeedback onPress={reset}>
+          <View style={styles.overlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.card}>
+                {/* Header */}
+                <View style={styles.header}>
+                  <View style={styles.headerIcon}>
+                    <Ionicons name="pencil" size={24} color={Colors.primary.main} />
+                  </View>
+                  <Text style={styles.title}>Edit Route</Text>
+                  <TouchableOpacity style={styles.closeButton} onPress={reset}>
+                    <Ionicons name="close" size={24} color={Colors.text.secondary} />
+                  </TouchableOpacity>
+                </View>
 
-                    {/* Route Name */}
+                {/* Divider */}
+                <View style={styles.divider} />
+
+                {/* Content */}
+                <ScrollView 
+                  style={styles.content}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {/* Route Name */}
+                  <View style={styles.inputWrapper}>
                     <Text style={styles.label}>Route Name</Text>
-                    <TextInput
+                    <View style={styles.inputContainer}>
+                      <Ionicons
+                        name="flag-outline"
+                        size={20}
+                        color={Colors.text.tertiary}
+                        style={styles.inputIcon}
+                      />
+                      <TextInput
                         style={styles.input}
                         placeholder="Route name"
+                        placeholderTextColor={Colors.text.tertiary}
                         value={routeName}
                         onChangeText={setRouteName}
-                    />
+                        autoCorrect={false}
+                      />
+                    </View>
+                  </View>
 
-                    {/* Comments */}
-                    <Text style={[styles.label, { marginTop: 15 }]}>Comments (Optional)</Text>
-                    <TextInput
+                  {/* Comments */}
+                  <View style={styles.inputWrapper}>
+                    <Text style={styles.label}>Comments (Optional)</Text>
+                    <View style={styles.commentsContainer}>
+                      <TextInput
                         style={styles.commentsInput}
-                        placeholder="Add comments"
-                        placeholderTextColor="#000"
+                        placeholder="Add notes for riders..."
+                        placeholderTextColor={Colors.text.tertiary}
                         value={customComments}
                         onChangeText={setCustomComments}
                         multiline
                         numberOfLines={3}
                         textAlignVertical="top"
-                    />
+                      />
+                    </View>
+                  </View>
+
+                  {/* Action Buttons */}
+                  <View style={styles.buttonRow}>
+                    {/* Delete Button */}
+                    {onDelete && (
+                      <TouchableOpacity 
+                        style={styles.deleteButton} 
+                        onPress={handleDelete}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="trash-outline" size={20} color={Colors.accent.error} />
+                      </TouchableOpacity>
+                    )}
 
                     {/* Save Button */}
-                    <Pressable style={styles.saveButton} onPress={handleSave}>
+                    <TouchableOpacity 
+                      onPress={handleSave} 
+                      activeOpacity={0.8}
+                      style={styles.saveButtonWrapper}
+                    >
+                      <LinearGradient
+                        colors={[Colors.primary.main, Colors.primary.dark]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.saveButton}
+                      >
+                        <Ionicons
+                          name="checkmark"
+                          size={20}
+                          color={Colors.text.inverse}
+                        />
                         <Text style={styles.saveButtonText}>Save Changes</Text>
-                    </Pressable>
-                </Pressable>
-            </Pressable>
-        </Modal>
-    );
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={{ height: 20 }} />
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.45)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    card: {
-        width: "85%",
-        padding: 20,
-        paddingTop: 36,
-        borderRadius: 16,
-        backgroundColor: "white",
-        position: "relative",
-    },
-    closeIcon: {
-        position: "absolute",
-        top: 12,
-        right: 12,
-        padding: 4,
-        zIndex: 20,
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: "600",
-        marginBottom: 15,
-        textAlign: "center",
-    },
-    label: {
-        fontSize: 16,
-        marginBottom: 6,
-        fontWeight: "500",
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        fontSize: 16,
-    },
-    commentsInput: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 10,
-        fontSize: 16,
-        minHeight: 80,
-    },
-    saveButton: {
-        marginTop: 20,
-        backgroundColor: "#3B82F6",
-        paddingVertical: 14,
-        borderRadius: 10,
-        alignItems: "center",
-    },
-    saveButtonText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 16,
-    },
+  keyboardView: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: Colors.surface.overlay,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  card: {
+    width: "90%",
+    maxHeight: "85%",
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius["2xl"],
+    overflow: "hidden",
+    ...Shadows.xl,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.xl,
+    paddingBottom: Spacing.lg,
+  },
+  headerIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: `${Colors.primary.main}15`,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  title: {
+    flex: 1,
+    fontWeight: FontWeights.bold,
+    fontSize: Typography.fontSize["2xl"],
+    color: Colors.text.primary,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background.lightSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginHorizontal: Spacing.xl,
+  },
+  content: {
+    padding: Spacing.xl,
+  },
+  inputWrapper: {
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.sm,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+  },
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  input: {
+    flex: 1,
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    paddingVertical: Spacing.md,
+  },
+  commentsContainer: {
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  commentsInput: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    minHeight: 80,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  deleteButton: {
+    width: 52,
+    height: 52,
+    borderRadius: BorderRadius.md,
+    backgroundColor: `${Colors.accent.error}10`,
+    borderWidth: 1,
+    borderColor: `${Colors.accent.error}20`,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  saveButtonWrapper: {
+    flex: 1,
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+    ...Shadows.glow,
+  },
+  saveButtonText: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
+  },
 });

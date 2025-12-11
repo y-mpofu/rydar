@@ -1,5 +1,25 @@
+import {
+  BorderRadius,
+  Colors,
+  FontWeights,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import {
+  ActionSheetIOS,
+  Alert,
+  Linking,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import type { NearbyDriver } from "../services/drivers";
 
 type Props = {
@@ -8,55 +28,195 @@ type Props = {
   onClose: () => void;
 };
 
+type MapApp = {
+  name: string;
+  icon: string;
+  getUrl: (lat: number, lng: number) => string;
+  checkUrl?: string;
+};
+
+const MAP_APPS: MapApp[] = [
+  {
+    name: "Google Maps",
+    icon: "logo-google",
+    getUrl: (lat, lng) => 
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
+  },
+  ...(Platform.OS === "ios" ? [{
+    name: "Apple Maps",
+    icon: "map",
+    getUrl: (lat: number, lng: number) => `maps://app?daddr=${lat},${lng}`,
+    checkUrl: "maps://",
+  }] : []),
+  {
+    name: "Waze",
+    icon: "navigate",
+    getUrl: (lat, lng) => `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`,
+    checkUrl: "waze://",
+  },
+];
+
 export default function DriverDetailPopup({ visible, driver, onClose }: Props) {
   if (!driver) return null;
+
+  const openMapApp = async (mapApp: MapApp) => {
+    const { latitude, longitude } = driver;
+    const url = mapApp.getUrl(latitude, longitude);
+
+    try {
+      // Check if the app is installed (for native apps)
+      if (mapApp.checkUrl) {
+        const canOpen = await Linking.canOpenURL(mapApp.checkUrl);
+        if (!canOpen) {
+          Alert.alert(
+            `${mapApp.name} Not Installed`,
+            `Please install ${mapApp.name} or choose another maps app.`,
+            [{ text: "OK" }]
+          );
+          return;
+        }
+      }
+      
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert(
+        "Unable to Open Maps",
+        "There was a problem opening the maps app.",
+        [{ text: "OK" }]
+      );
+    }
+  };
+
+  const handleGetDirections = () => {
+    if (Platform.OS === "ios") {
+      // Use iOS Action Sheet for a native feel
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: "Choose Maps App",
+          message: "Select your preferred navigation app",
+          options: ["Cancel", ...MAP_APPS.map(app => app.name)],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex > 0) {
+            openMapApp(MAP_APPS[buttonIndex - 1]);
+          }
+        }
+      );
+    } else {
+      // Use Alert for Android
+      Alert.alert(
+        "Choose Maps App",
+        "Select your preferred navigation app",
+        [
+          { text: "Cancel", style: "cancel" },
+          ...MAP_APPS.map(app => ({
+            text: app.name,
+            onPress: () => openMapApp(app),
+          })),
+        ]
+      );
+    }
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.card} onPress={() => {}}>
-          {/* X Button */}
-          <Pressable style={styles.closeIcon} onPress={onClose}>
-            <Ionicons name="close" size={28} color="black" />
-          </Pressable>
-
-          <Text style={styles.title}>Driver Details</Text>
-
-          {/* Route Name */}
-          <View style={styles.section}>
-            <View style={styles.iconRow}>
-              <Ionicons
-                name="navigate-circle-outline"
-                size={20}
-                color="#3B82F6"
-              />
-              <Text style={styles.label}>Route</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            <LinearGradient
+              colors={[Colors.primary.main, Colors.primary.dark]}
+              style={styles.driverAvatar}
+            >
+              <Ionicons name="car" size={28} color={Colors.text.inverse} />
+            </LinearGradient>
+            <View style={styles.headerInfo}>
+              <Text style={styles.title}>Driver Nearby</Text>
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>Active</Text>
+              </View>
             </View>
-            <Text style={styles.value}>{driver.currRouteName}</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Ionicons name="close" size={24} color={Colors.text.secondary} />
+            </TouchableOpacity>
           </View>
 
-          {/* Custom Comments */}
-          {driver.customComments && driver.customComments !== "No Comment" && (
-            <View style={styles.section}>
-              <View style={styles.iconRow}>
-                <Ionicons name="chatbubble-outline" size={20} color="#3B82F6" />
-                <Text style={styles.label}>Comments</Text>
-              </View>
-              <Text style={styles.commentsValue}>
-                "{driver.customComments}"
-              </Text>
-            </View>
-          )}
+          {/* Divider */}
+          <View style={styles.divider} />
 
-          {/* Location Coordinates (Optional - can remove if not needed) */}
-          <View style={styles.section}>
-            <View style={styles.iconRow}>
-              <Ionicons name="location-outline" size={20} color="#3B82F6" />
-              <Text style={styles.label}>Current Location</Text>
+          {/* Content */}
+          <View style={styles.content}>
+            {/* Route Name */}
+            <View style={styles.infoCard}>
+              <View style={styles.infoIconContainer}>
+                <Ionicons
+                  name="navigate-circle"
+                  size={24}
+                  color={Colors.primary.main}
+                />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Heading to</Text>
+                <Text style={styles.infoValue}>{driver.currRouteName}</Text>
+              </View>
             </View>
-            <Text style={styles.coordValue}>
-              {driver.latitude.toFixed(4)}, {driver.longitude.toFixed(4)}
-            </Text>
+
+            {/* Custom Comments */}
+            {driver.customComments && 
+             driver.customComments.trim() !== "" && 
+             driver.customComments.toLowerCase() !== "no comment" && (
+              <View style={styles.infoCard}>
+                <View style={styles.infoIconContainer}>
+                  <Ionicons
+                    name="chatbubble"
+                    size={22}
+                    color={Colors.primary.light}
+                  />
+                </View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>Driver's Note</Text>
+                  <Text style={styles.commentsValue}>
+                    "{driver.customComments}"
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Get Directions Button */}
+            <TouchableOpacity
+              onPress={handleGetDirections}
+              activeOpacity={0.9}
+              style={styles.directionsButtonWrapper}
+            >
+              <LinearGradient
+                colors={[Colors.accent.success, "#059669"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.directionsButton}
+              >
+                <View style={styles.directionsIconContainer}>
+                  <Ionicons name="navigate" size={22} color={Colors.text.inverse} />
+                </View>
+                <View style={styles.directionsTextContainer}>
+                  <Text style={styles.directionsButtonText}>Get Directions</Text>
+                  <Text style={styles.directionsSubtext}>
+                    Choose your preferred maps app
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.doneButton}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.doneButtonText}>Close</Text>
+            </TouchableOpacity>
           </View>
         </Pressable>
       </Pressable>
@@ -67,60 +227,161 @@ export default function DriverDetailPopup({ visible, driver, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: Colors.surface.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   card: {
-    width: "85%",
-    padding: 20,
-    paddingTop: 36,
-    borderRadius: 16,
-    backgroundColor: "white",
-    position: "relative",
+    width: "90%",
+    backgroundColor: Colors.surface.card,
+    borderRadius: BorderRadius["2xl"],
+    overflow: "hidden",
+    ...Shadows.xl,
   },
-  closeIcon: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    padding: 4,
-    zIndex: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  section: {
-    marginBottom: 18,
-  },
-  iconRow: {
+  header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.lg,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#6b7280",
-    marginLeft: 8,
+  driverAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.xl,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+    ...Shadows.glow,
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  title: {
+    fontWeight: FontWeights.bold,
+    fontSize: Typography.fontSize.xl,
+    color: Colors.text.primary,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.accent.success,
+  },
+  statusText: {
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.accent.success,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.background.lightSecondary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginHorizontal: Spacing.xl,
+  },
+  content: {
+    padding: Spacing.xl,
+  },
+  infoCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    backgroundColor: Colors.background.light,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  infoIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.surface.card,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontWeight: FontWeights.medium,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.text.tertiary,
     textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
-  value: {
-    fontSize: 18,
-    fontWeight: "500",
-    color: "#111827",
+  infoValue: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.primary,
   },
   commentsValue: {
-    fontSize: 16,
-    color: "#374151",
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
     fontStyle: "italic",
     lineHeight: 22,
   },
-  coordValue: {
-    fontSize: 14,
-    color: "#6b7280",
-    fontFamily: "monospace",
+  
+  // Directions Button
+  directionsButtonWrapper: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    ...Shadows.lg,
+  },
+  directionsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+  },
+  directionsIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.md,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  directionsTextContainer: {
+    flex: 1,
+  },
+  directionsButtonText: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.lg,
+    color: Colors.text.inverse,
+  },
+  directionsSubtext: {
+    fontWeight: FontWeights.regular,
+    fontSize: Typography.fontSize.sm,
+    color: "rgba(255, 255, 255, 0.7)",
+    marginTop: 2,
+  },
+  
+  doneButton: {
+    backgroundColor: Colors.background.lightSecondary,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+  },
+  doneButtonText: {
+    fontWeight: FontWeights.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.secondary,
   },
 });

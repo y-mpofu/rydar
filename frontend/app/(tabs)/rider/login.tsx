@@ -1,97 +1,272 @@
-import React, { useState } from "react";
-import { useRouter } from "expo-router";
-import { loginRider } from "./services/auth";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  BorderRadius,
+  Colors,
+  Shadows,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
+import * as haptics from "@/utils/haptics";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
+  Animated,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { loginRider } from "./services/auth";
 
 export default function RiderLogin() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const passwordInputRef = useRef<TextInput>(null);
+  const router = useRouter();
 
-    const handleLogin = async () => {
-        setError(""); // clear previous errors
+  // Animation for error shake
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
 
-        try {
-            const res = await loginRider(email, password);
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+    ]).start();
+  };
 
-            if (res?.token) {
-                router.push("/rider/home");
-            } else {
-                setError("Invalid credentials");
-            }
-        } catch (err) {
-            setError("Invalid credentials");
-        }
-    };
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
+  };
 
-    return (
-        <View style={styles.container}>
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
+  };
 
-            {/* Error message ABOVE email input */}
-            {error ? (
-                <Text style={styles.errorText}>{error}</Text>
-            ) : null}
+  const handleLogin = async () => {
+    setError("");
+    setIsLoading(true);
+    haptics.mediumTap();
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-            />
+    try {
+      const res = await loginRider(email, password);
 
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
+      if (res?.token) {
+        haptics.success();
+        router.push("/rider/home");
+      } else {
+        setError("Invalid credentials");
+        shake();
+        haptics.error();
+      }
+    } catch (err) {
+      setError("Invalid credentials");
+      shake();
+      haptics.error();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
-            </TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      {/* Error Message */}
+      {error !== "" && (
+        <Animated.View
+          style={[
+            styles.errorContainer,
+            { transform: [{ translateX: shakeAnim }] },
+          ]}
+        >
+          <Ionicons name="alert-circle" size={18} color={Colors.accent.error} />
+          <Text style={styles.errorText}>{error}</Text>
+        </Animated.View>
+      )}
 
+      {/* Email Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.label}>Email</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="mail-outline"
+            size={20}
+            color={Colors.text.tertiary}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor={Colors.text.tertiary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            returnKeyType="next"
+            value={email}
+            onChangeText={setEmail}
+            onSubmitEditing={() => {
+              passwordInputRef.current?.focus();
+            }}
+            blurOnSubmit={false}
+          />
         </View>
-    );
+      </View>
+
+      {/* Password Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.label}>Password</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={20}
+            color={Colors.text.tertiary}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            ref={passwordInputRef}
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor={Colors.text.tertiary}
+            secureTextEntry={!showPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="done"
+            value={password}
+            onChangeText={setPassword}
+            onSubmitEditing={handleLogin}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.eyeButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={Colors.text.tertiary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Login Button */}
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <TouchableOpacity
+          onPress={handleLogin}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={isLoading}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={[Colors.primary.main, Colors.primary.dark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+          >
+            {isLoading ? (
+              <Text style={styles.buttonText}>Signing in...</Text>
+            ) : (
+              <>
+                <Text style={styles.buttonText}>Login</Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={20}
+                  color={Colors.text.inverse}
+                  style={styles.buttonIcon}
+                />
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: { width: "100%" },
-
-    errorText: {
-        color: "red",
-        marginBottom: 10,
-        fontSize: 14,
-        fontWeight: "500",
-    },
-
-    input: {
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: "#D1D5DB",
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 15,
-    },
-
-    button: {
-        backgroundColor: "#3B82F6",
-        paddingVertical: 14,
-        borderRadius: 10,
-        alignItems: "center",
-    },
-
-    buttonText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 16,
-    },
+  container: {
+    width: "100%",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 61, 87, 0.1)",
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: "rgba(255, 61, 87, 0.3)",
+  },
+  errorText: {
+    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.accent.error,
+    marginLeft: Spacing.sm,
+  },
+  inputWrapper: {
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.sm,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background.light,
+    borderWidth: 1.5,
+    borderColor: Colors.border.light,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    height: 52,
+  },
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  input: {
+    flex: 1,
+    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.primary,
+    height: "100%",
+  },
+  eyeButton: {
+    padding: Spacing.sm,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+    ...Shadows.glow,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.base,
+    color: Colors.text.inverse,
+  },
+  buttonIcon: {
+    marginLeft: Spacing.sm,
+  },
 });
