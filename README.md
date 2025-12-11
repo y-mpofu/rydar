@@ -63,6 +63,12 @@ npm install -g expo-cli
 **Commands**
 ```bash
 cd ../frontend
+
+cat > .env << 'EOF'
+EXPO_PUBLIC_MAPBOX_KEY=pk.eyJ1Ijoic2lpc28iLCJhIjoiY21pdzl1bmZrMXp2OTNmcTBpbTYyd2hqcyJ9.klbmlBth7KWKtiyFNfccjA
+EXPO_PUBLIC_GOOGLE_PLACES_KEY=AIzaSyDBJuTp9tc_5DpprI7zxAJaGga16pALuWo
+EOF
+
 npm install
 npm start
 ```
