@@ -8,10 +8,6 @@
     "scheme": "frontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "extra": {
-      "MAPBOX_KEY": "",
-      "GOOGLE_PLACES_KEY": ""
-    },
     "ios": {
       "supportsTablet": true
     },
