@@ -21,6 +21,8 @@ import {
 import { signupDriver } from "./services/auth";
 
 export default function DriverSignup() {
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,6 +31,8 @@ export default function DriverSignup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
+  const lastnameInputRef = useRef<TextInput>(null);
+  const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const confirmPasswordInputRef = useRef<TextInput>(null);
   const router = useRouter();
@@ -65,7 +69,7 @@ export default function DriverSignup() {
     setError("");
     haptics.mediumTap();
 
-    if (!email || !password || !confirmPassword) {
+    if (!firstname || !lastname || !email || !password || !confirmPassword) {
       setError("All fields are required");
       shake();
       haptics.warning();
@@ -82,7 +86,7 @@ export default function DriverSignup() {
     setIsLoading(true);
 
     try {
-      const res = await signupDriver("Driver", "User", email, password);
+      const res = await signupDriver(firstname, lastname, email, password);
       console.log("Signup success:", res);
       haptics.success();
       router.push("/driver/home");
@@ -110,6 +114,61 @@ export default function DriverSignup() {
         </Animated.View>
       )}
 
+      {/* First Name Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.label}>First Name</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="person-outline"
+            size={20}
+            color={Colors.text.tertiary}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your first name"
+            placeholderTextColor={Colors.text.tertiary}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="next"
+            value={firstname}
+            onChangeText={setFirstname}
+            onSubmitEditing={() => {
+              lastnameInputRef.current?.focus();
+            }}
+            blurOnSubmit={false}
+          />
+        </View>
+      </View>
+
+      {/* Last Name Input */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.label}>Last Name</Text>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="person-outline"
+            size={20}
+            color={Colors.text.tertiary}
+            style={styles.inputIcon}
+          />
+          <TextInput
+            ref={lastnameInputRef}
+            style={styles.input}
+            placeholder="Enter your last name"
+            placeholderTextColor={Colors.text.tertiary}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="next"
+            value={lastname}
+            onChangeText={setLastname}
+            onSubmitEditing={() => {
+              emailInputRef.current?.focus();
+            }}
+            blurOnSubmit={false}
+          />
+        </View>
+      </View>
+
       {/* Email Input */}
       <View style={styles.inputWrapper}>
         <Text style={styles.label}>Email</Text>
@@ -121,6 +180,7 @@ export default function DriverSignup() {
             style={styles.inputIcon}
           />
           <TextInput
+            ref={emailInputRef}
             style={styles.input}
             placeholder="Enter your email"
             placeholderTextColor={Colors.text.tertiary}
